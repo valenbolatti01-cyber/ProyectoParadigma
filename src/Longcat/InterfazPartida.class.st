@@ -13,7 +13,9 @@ Class {
 		'textoColumnas',
 		'textoEstado',
 		'textoLongitud',
-		'textoLibres'
+		'textoLibres',
+		'sprites',
+		'imagenesCeldas'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -26,9 +28,60 @@ InterfazPartida class >> abrir [
 
 { #category : 'opening' }
 InterfazPartida >> abrir [
-    self construirControles.
-    self iniciarNuevaPartida.
-    self openInWindowLabeled: 'Longcat'.
+	self cargarSprites.
+	self construirControles.
+	self iniciarNuevaPartida.
+	self openInWindowLabeled: 'Longcat'.
+	self takeKeyboardFocus.
+	^ self
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> actualizarImagenes [
+    | segmentos indice actual anterior siguiente imagen sprite |
+
+    segmentos := partida posicionesOcupadas.
+    indice := 0.
+
+    "Ocultar todas las imágenes"
+    imagenesCeldas do: [ :cadaImagen |
+        cadaImagen visible: false
+    ].
+
+    segmentos do: [ :posicion |
+        indice := indice + 1.
+
+        imagen := imagenesCeldas at: (
+            ((posicion fila - 1) * partida columnas) +
+            posicion columna
+        ).
+
+        "Dibujar la cabeza"
+        (indice = 1) ifTrue: [
+            imagen form: (
+                (sprites at: #cabezaAbajo) scaledToSize: 32 @ 32
+            ).
+            imagen visible: true
+        ].
+
+        "Dibujar el cuerpo intermedio"
+        ((indice > 1) and: [ indice < segmentos size ]) ifTrue: [
+            anterior := segmentos at: indice - 1.
+            actual := segmentos at: indice.
+            siguiente := segmentos at: indice + 1.
+
+            sprite := self
+                spritePara: anterior
+                actual: actual
+                siguiente: siguiente.
+
+            sprite ifNotNil: [
+                imagen form: (sprite scaledToSize: 32 @ 32).
+                imagen visible: true
+            ].
+        ].
+    ].
+
     ^ self
 ]
 
@@ -43,6 +96,7 @@ InterfazPartida >> actualizarVista [
             (celdas at: indice) color: (self colorDe: posicion)
         ]
     ].
+	 self actualizarImagenes .
     textoEstado contents: (self mensajeEstado).
     textoLongitud contents: 'Longitud: ', partida longitudGato asString.
     textoLibres contents: 'Casillas libres: ', partida cantidadDisponibles asString.
@@ -61,6 +115,53 @@ InterfazPartida >> aumentarFilas [
     filasConfiguradas < 12 ifTrue: [ filasConfiguradas := filasConfiguradas + 1 ].
     textoFilas contents: filasConfiguradas asString.
     ^ self
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> cargarSprites [
+    sprites := Dictionary new.
+
+    sprites at: #cuerpoHorizontal put:
+        (ImageReadWriter formFromFileNamed:
+        'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_cuerpo_recto_horizontal.png').
+
+    sprites at: #cuerpoVertical put:
+        (ImageReadWriter formFromFileNamed:
+        'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_cuerpo_recto_vertical.png').
+
+	sprites at: #curvaArribaDerecha put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_arriba_derecha.png').
+
+	sprites at: #curvaArribaIzquierda put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_arriba_izquierda.png').
+
+	sprites at: #curvaIzquierdaAbajo put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_izquierda_abajo.png').
+
+	sprites at: #curvaDerechaAbajo put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_derecha_abajo.png').
+
+	sprites at: #cabezaAbajo put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato abajo.png').
+
+	sprites at: #cabezaArriba put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato arriba.png').
+
+	sprites at: #cabezaDerecha put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato derecha.png').
+
+	sprites at: #cabezaIzquierda put:
+    (ImageReadWriter formFromFileNamed:
+    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato izquierda.png').
+
+    ^ sprites
 ]
 
 { #category : 'private - rendering' }
@@ -101,18 +202,34 @@ Cada movimiento llega hasta el bloqueo.' en: 20 @ 510 tamano: 220 @ 55.
 
 { #category : 'private - building' }
 InterfazPartida >> construirTablero [
-    | posicion celda |
+    | posicion celda imagen |
     celdas := OrderedCollection new.
+    imagenesCeldas := OrderedCollection new.
+
     1 to: partida filas do: [ :fila |
         1 to: partida columnas do: [ :columna |
-            posicion := ((Smalltalk globals at: #Posicion) fila: fila columna: columna).
+            posicion := ((Smalltalk globals at: #Posicion)
+                fila: fila columna: columna).
+
             celda := (Smalltalk globals at: #Morph) new.
             celda extent: 32 @ 32.
             celda borderWidth: 1.
             celda borderColor: Color gray.
+
+            imagen := ImageMorph new.
+            imagen extent: 32 @ 32.
+            celda addMorph: imagen.
+            imagen position: celda position.
+
             self addMorph: celda.
-            celda position: self position + (250 + ((columna - 1) * 36) @ (92 + ((fila - 1) * 36))).
-            celdas add: celda
+            celda position: self position +
+                (250 + ((columna - 1) * 36) @
+                (92 + ((fila - 1) * 36))).
+
+            imagen position: celda position.
+
+            celdas add: celda.
+            imagenesCeldas add: imagen
         ]
     ].
     ^ self
@@ -130,6 +247,11 @@ InterfazPartida >> disminuirFilas [
     filasConfiguradas > 2 ifTrue: [ filasConfiguradas := filasConfiguradas - 1 ].
     textoFilas contents: filasConfiguradas asString.
     ^ self
+]
+
+{ #category : 'event handling' }
+InterfazPartida >> handlesKeyboard: anEvent [
+    ^ true
 ]
 
 { #category : 'actions' }
@@ -155,6 +277,29 @@ InterfazPartida >> initialize [
     self extent: 720 @ 590.
     self color: Color veryLightGray.
     ^ self
+]
+
+{ #category : 'event handling' }
+InterfazPartida >> keyDown: anEvent [
+    (anEvent key) isArrowUp ifTrue: [
+        ^ self moverArriba
+    ].
+    (anEvent key) isArrowDown ifTrue: [
+        ^ self moverAbajo
+    ].
+    (anEvent key) isArrowLeft ifTrue: [
+        ^ self moverIzquierda
+    ].
+    (anEvent key) isArrowRight ifTrue: [
+        ^ self moverDerecha
+    ].
+    ^ super keyDown: anEvent
+]
+
+{ #category : 'event handling' }
+InterfazPartida >> keyStroke: anEvent [
+    self inform: 'Recibí una pulsación de teclado'.
+    ^ true
 ]
 
 { #category : 'private - rendering' }
@@ -219,4 +364,82 @@ InterfazPartida >> reiniciarPartida [
     partida reiniciar.
     self actualizarVista.
     ^ self
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> spriteEntre: posicionA y: posicionB [
+    (posicionA fila = posicionB fila) ifTrue: [
+        ^ sprites at: #cuerpoHorizontal
+    ].
+
+    (posicionA columna = posicionB columna) ifTrue: [
+        ^ sprites at: #cuerpoVertical
+    ].
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> spritePara: anterior actual: actual siguiente: siguiente [
+
+    ((anterior fila = actual fila) and: [
+        actual fila = siguiente fila
+    ]) ifTrue: [
+        ^ sprites at: #cuerpoHorizontal
+    ].
+
+    ((anterior columna = actual columna) and: [
+        actual columna = siguiente columna
+    ]) ifTrue: [
+        ^ sprites at: #cuerpoVertical
+    ].
+
+    "Curva arriba-derecha"
+    (((anterior fila < actual fila) and: [
+        siguiente columna > actual columna
+    ]) or: [
+        (siguiente fila < actual fila) and: [
+            anterior columna > actual columna
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaArribaDerecha
+    ].
+
+    "Curva arriba-izquierda"
+    (((anterior fila < actual fila) and: [
+        siguiente columna < actual columna
+    ]) or: [
+        (siguiente fila < actual fila) and: [
+            anterior columna < actual columna
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaArribaIzquierda
+    ].
+
+    "Curva izquierda-abajo"
+    (((anterior columna < actual columna) and: [
+        siguiente fila > actual fila
+    ]) or: [
+        (siguiente columna < actual columna) and: [
+            anterior fila > actual fila
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaIzquierdaAbajo
+    ].
+
+    "Curva derecha-abajo"
+    (((anterior columna > actual columna) and: [
+        siguiente fila > actual fila
+    ]) or: [
+        (siguiente columna > actual columna) and: [
+            anterior fila > actual fila
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaDerechaAbajo
+    ].
+
+    ^ nil
+]
+
+{ #category : 'event handling' }
+InterfazPartida >> takesKeyboardFocus [
+    ^ true
 ]
