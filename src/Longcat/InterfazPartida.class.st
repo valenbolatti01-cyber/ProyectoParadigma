@@ -119,49 +119,59 @@ InterfazPartida >> aumentarFilas [
 
 { #category : 'as yet unclassified' }
 InterfazPartida >> cargarSprites [
+    | repositorio carpetaSprites |
+
+    repositorio := IceRepository registry
+        detect: [ :cadaRepositorio |
+            cadaRepositorio name = 'ProyectoParadigma'
+        ].
+
+    carpetaSprites := repositorio location / 'assets' / 'sprites'.
+
     sprites := Dictionary new.
 
     sprites at: #cuerpoHorizontal put:
         (ImageReadWriter formFromFileNamed:
-        'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_cuerpo_recto_horizontal.png').
+            (carpetaSprites / 'Longcat_cuerpo_recto_horizontal.png') fullName).
 
     sprites at: #cuerpoVertical put:
         (ImageReadWriter formFromFileNamed:
-        'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_cuerpo_recto_vertical.png').
+            (carpetaSprites / 'Longcat_cuerpo_recto_vertical.png') fullName).
 
-	sprites at: #curvaArribaDerecha put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_arriba_derecha.png').
+    sprites at: #curvaArribaDerecha put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Longcat_curva_arriba_derecha.png') fullName).
 
-	sprites at: #curvaArribaIzquierda put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_arriba_izquierda.png').
+    sprites at: #curvaArribaIzquierda put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Longcat_curva_arriba_izquierda.png') fullName).
 
-	sprites at: #curvaIzquierdaAbajo put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_izquierda_abajo.png').
+    sprites at: #curvaIzquierdaAbajo put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Longcat_curva_izquierda_abajo.png') fullName).
 
-	sprites at: #curvaDerechaAbajo put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Longcat_curva_derecha_abajo.png').
+    sprites at: #curvaDerechaAbajo put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Longcat_curva_derecha_abajo.png') fullName).
 
-	sprites at: #cabezaAbajo put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato abajo.png').
+    sprites at: #cabezaAbajo put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Gato abajo.png') fullName).
 
-	sprites at: #cabezaArriba put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato arriba.png').
+    sprites at: #cabezaArriba put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Gato arriba.png') fullName).
 
-	sprites at: #cabezaDerecha put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato derecha.png').
+    sprites at: #cabezaDerecha put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Gato derecha.png') fullName).
 
-	sprites at: #cabezaIzquierda put:
-    (ImageReadWriter formFromFileNamed:
-    'C:/Users/HUGO/Desktop/Flor Facultad/2do año/Paradigmas/Pharo/Gato izquierda.png').
+    sprites at: #cabezaIzquierda put:
+        (ImageReadWriter formFromFileNamed:
+            (carpetaSprites / 'Gato izquierda.png') fullName).
 
     ^ sprites
+
 ]
 
 { #category : 'private - rendering' }
