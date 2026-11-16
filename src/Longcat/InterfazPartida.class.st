@@ -16,7 +16,9 @@ Class {
 		'completados',
 		'textoNivel',
 		'textoProgreso',
-		'animacion'
+		'animacion',
+		'estrellas',
+		'avatar'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -31,9 +33,10 @@ InterfazPartida class >> abrir [
 { #category : 'opening' }
 InterfazPartida >> abrir [
 	self cargarSprites.
+	avatar := (sprites at: #cabezaAbajo) scaledToSize: 116 @ 116.
 	self construirControles.
 	self iniciarNuevaPartida.
-	self openInWindowLabeled: 'Longcat'.
+	self openInWindowLabeled: 'Longcat.exe'.
 	self takeKeyboardFocus.
 	^ self
 
@@ -93,7 +96,7 @@ InterfazPartida >> celebrarVictoria [
     esElUltimo := nivelActual >= (Smalltalk globals at: #Nivel) cantidad.
     animacion := (Smalltalk globals at: #VictoriaMorph)
         sobre: self
-        centro: vistaTablero center
+        centro: vistaTablero pantalla center
         mensaje: (esElUltimo
             ifTrue: [ '¡GANASTE TODO!' ]
             ifFalse: [ '¡NIVEL COMPLETADO!' ])
@@ -107,30 +110,78 @@ InterfazPartida >> celebrarVictoria [
 
 ]
 
+{ #category : 'private - colors' }
+InterfazPartida >> colorCrema [
+	^ Color r: 245 g: 214 b: 160 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorLavanda [
+	^ Color r: 190 g: 178 b: 230 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorMarco [
+	^ Color r: 26 g: 29 b: 38 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorMorado [
+	^ Color r: 139 g: 115 b: 214 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorNaranja [
+	^ Color r: 233 g: 154 b: 69 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorPizarra [
+	^ Color r: 52 g: 59 b: 73 range: 255
+
+]
+
+{ #category : 'private - colors' }
+InterfazPartida >> colorVerde [
+	^ Color r: 140 g: 203 b: 103 range: 255
+
+]
+
 { #category : 'building' }
 InterfazPartida >> construirControles [
-    | titulo instrucciones boton |
-    titulo := self nuevoTexto: 'LONGCAT' en: 20 @ 18 tamano: 190 @ 32.
-    titulo emphasis: (Smalltalk globals at: #TextEmphasis) bold.
-    self nuevoBoton: 'Reiniciar nivel' accion: #reiniciarPartida en: 20 @ 62 tamano: 188 @ 36.
-    self nuevoTexto: 'Mover' en: 20 @ 125 tamano: 188 @ 25.
-    self nuevoBoton: '^' accion: #moverArriba en: 92 @ 155 tamano: 42 @ 38.
-    self nuevoBoton: '<' accion: #moverIzquierda en: 45 @ 197 tamano: 42 @ 38.
-    self nuevoBoton: 'v' accion: #moverAbajo en: 92 @ 197 tamano: 42 @ 38.
-    self nuevoBoton: '>' accion: #moverDerecha en: 139 @ 197 tamano: 42 @ 38.
-    textoEstado := self nuevoTexto: '' en: 20 @ 260 tamano: 205 @ 50.
-    textoLongitud := self nuevoTexto: '' en: 20 @ 320 tamano: 205 @ 26.
-    textoLibres := self nuevoTexto: '' en: 20 @ 348 tamano: 205 @ 26.
-    instrucciones := self nuevoTexto: 'Usa los botones para avanzar.
-Cada movimiento llega hasta el bloqueo.' en: 20 @ 400 tamano: 220 @ 55.
-    instrucciones color: Color darkGray.
-    textoNivel := self nuevoTexto: '' en: 250 @ 18 tamano: 220 @ 26.
-    self nuevoBoton: 'Nivel anterior' accion: #nivelAnterior en: 250 @ 48 tamano: 112 @ 30.
-    self nuevoBoton: 'Siguiente nivel' accion: #siguienteNivel en: 370 @ 48 tamano: 112 @ 30.
-    textoProgreso := self nuevoTexto: '' en: 250 @ 405 tamano: 440 @ 26.
-    self nuevoTexto: 'Ir al nivel (se desbloquea al completar el anterior):' en: 250 @ 435 tamano: 440 @ 26.
+    | texto boton |
+    "Panel izquierdo: controles"
+    self nuevoBoton: 'Reiniciar nivel' accion: #reiniciarPartida en: 30 @ 104 tamano: 192 @ 34.
+    texto := self nuevoTexto: 'Mover' en: 30 @ 150 tamano: 188 @ 22.
+    texto color: self colorVerde.
+    self nuevoBoton: '^' accion: #moverArriba en: 105 @ 174 tamano: 42 @ 38.
+    self nuevoBoton: '<' accion: #moverIzquierda en: 58 @ 216 tamano: 42 @ 38.
+    self nuevoBoton: 'v' accion: #moverAbajo en: 105 @ 216 tamano: 42 @ 38.
+    self nuevoBoton: '>' accion: #moverDerecha en: 152 @ 216 tamano: 42 @ 38.
+    textoEstado := self nuevoTexto: '' en: 30 @ 274 tamano: 200 @ 22.
+    textoEstado color: self colorVerde.
+    textoLongitud := self nuevoTexto: '' en: 30 @ 302 tamano: 200 @ 22.
+    textoLibres := self nuevoTexto: '' en: 30 @ 324 tamano: 200 @ 22.
+    texto := self nuevoTexto: 'Usa los botones o las flechas.' en: 30 @ 356 tamano: 200 @ 20.
+    texto color: self colorLavanda.
+    texto := self nuevoTexto: 'Cada movimiento va hasta chocar.' en: 30 @ 374 tamano: 200 @ 20.
+    texto color: self colorLavanda.
+    "Panel derecho: nivel y monitor"
+    textoNivel := self nuevoTexto: '' en: 268 @ 102 tamano: 220 @ 26.
+    textoNivel font: (self fuente: 14).
+    textoNivel color: self colorNaranja.
+    self nuevoBoton: 'Nivel anterior' accion: #nivelAnterior en: 520 @ 100 tamano: 104 @ 30.
+    self nuevoBoton: 'Siguiente nivel' accion: #siguienteNivel en: 632 @ 100 tamano: 104 @ 30.
+    textoProgreso := self nuevoTexto: '' en: 268 @ 522 tamano: 460 @ 20.
+    texto := self nuevoTexto: 'Ir al nivel (se desbloquea al completar el anterior):' en: 268 @ 542 tamano: 460 @ 20.
+    texto color: self colorLavanda.
     1 to: (Smalltalk globals at: #Nivel) cantidad do: [ :numero |
-        boton := self nuevoBoton: numero asString accion: #irANivel: en: (250 + ((numero - 1) * 44)) @ 465 tamano: 40 @ 30.
+        boton := self nuevoBoton: numero asString accion: #irANivel: en: (268 + ((numero - 1) * 46)) @ 566 tamano: 40 @ 30.
         boton arguments: (Array with: numero) ].
     ^ self
 
@@ -138,11 +189,154 @@ Cada movimiento llega hasta el bloqueo.' en: 20 @ 400 tamano: 220 @ 55.
 
 { #category : 'private - building' }
 InterfazPartida >> construirTablero [
-    "Un solo morph dibuja todo el tablero y el gato continuo (ver TableroMorph)"
+    "Un solo morph dibuja el monitor, el tablero y el gato continuo (ver TableroMorph).
+     Se centra dentro del panel de la derecha."
     vistaTablero := (Smalltalk globals at: #TableroMorph) partida: partida sprites: sprites.
     self addMorph: vistaTablero.
-    vistaTablero position: self position + (250 @ 92).
+    vistaTablero position: self position + ((498 - (vistaTablero width // 2)) @ 146).
     ^ self
+
+]
+
+{ #category : 'initialization' }
+InterfazPartida >> crearEstrellas [
+	"Pixeles y destellos fijos del fondo (misma semilla, siempre iguales)"
+	| azar colores |
+	azar := Random seed: 7.
+	colores := { self colorMorado. self colorVerde. self colorCrema. self colorNaranja }.
+	estrellas := (1 to: 90) collect: [ :indice |
+		{ ((azar next * 760) rounded @ (azar next * 628) rounded).
+		  (azar next < 0.8 ifTrue: [ 2 ] ifFalse: [ 3 ]).
+		  ((colores at: (indice \\ colores size) + 1) alpha: 0.35 + (azar next * 0.5)).
+		  (azar next < 0.7 ifTrue: [ #pixel ] ifFalse: [ #destello ]) } ].
+	^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> dibujarAvatarEn: aCanvas [
+	"El protagonista en la parte de abajo del panel de controles"
+	| centroX arriba globo fuente |
+	avatar ifNil: [ ^ self ].
+	centroX := self left + 126.
+	arriba := self top + 408.
+	aCanvas
+		fillOval: (Rectangle center: centroX @ (arriba + 58) extent: 136 @ 136)
+		color: (self colorMorado alpha: 0.22).
+	aCanvas translucentImage: avatar at: (centroX - (avatar width // 2)) @ arriba.
+	globo := ((centroX + 38) @ (arriba - 6)) extent: 44 @ 24.
+	aCanvas fillRectangle: globo color: self colorMarco.
+	aCanvas frameRectangle: globo width: 2 color: self colorCrema.
+	fuente := self fuente: 11.
+	aCanvas drawString: '</>' at: (globo left + 12) @ (globo top + 4) font: fuente color: self colorVerde.
+	aCanvas drawString: 'Longcat - Protagonista' at: (self left + 52) @ (arriba + 126) font: fuente color: self colorNaranja.
+	aCanvas drawString: 'Nerd, gamer y adicto al cafe' at: (self left + 44) @ (arriba + 146) font: (self fuente: 10) color: self colorLavanda.
+	^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> dibujarEncabezadoEn: aCanvas [
+	| franja fuenteTitulo fuenteNota x nota |
+	franja := self topLeft extent: self width @ 70.
+	aCanvas fillRectangle: franja color: (self colorMarco alpha: 0.6).
+	aCanvas fillRectangle: ((self left @ (franja bottom - 3)) extent: self width @ 2) color: self colorMorado.
+	aCanvas fillRectangle: ((self left @ (franja bottom - 1)) extent: self width @ 1) color: self colorVerde.
+	"Titulo con sombra morada"
+	fuenteTitulo := self fuente: 26.
+	x := self left + 20.
+	aCanvas drawString: 'LONGCAT' at: (x + 3) @ (self top + 9) font: fuenteTitulo color: self colorMorado.
+	aCanvas drawString: 'LONGCAT' at: x @ (self top + 6) font: fuenteTitulo color: self colorCrema.
+	x := x + (fuenteTitulo widthOfString: 'LONGCAT') + 2.
+	aCanvas drawString: '.exe' at: x @ (self top + 6) font: fuenteTitulo color: self colorVerde.
+	aCanvas
+		drawString: '<< El gato que llena el tablero >>'
+		at: (self left + 22) @ (self top + 46)
+		font: (self fuente: 10)
+		color: self colorLavanda.
+	"Post-it de la entrega"
+	nota := ((self right - 156) @ (self top + 10)) extent: 130 @ 48.
+	aCanvas fillRectangle: (nota translateBy: 3 @ 3) color: (Color black alpha: 0.4).
+	aCanvas fillRectangle: nota color: self colorCrema.
+	aCanvas fillRectangle: (nota topLeft extent: nota width @ 6) color: self colorNaranja.
+	fuenteNota := self fuente: 11.
+	aCanvas drawString: 'Entrega:' at: (nota left + 10) @ (nota top + 9) font: fuenteNota color: self colorPizarra.
+	aCanvas drawString: 'mañana 23:59' at: (nota left + 10) @ (nota top + 26) font: fuenteNota color: self colorPizarra.
+	^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> dibujarEstrella: unaEstrella en: aCanvas [
+	| centro tamano color |
+	centro := self position + (unaEstrella at: 1).
+	tamano := unaEstrella at: 2.
+	color := unaEstrella at: 3.
+	(unaEstrella at: 4) = #pixel
+		ifTrue: [ aCanvas fillRectangle: (centro extent: tamano @ tamano) color: color ]
+		ifFalse: [
+			aCanvas fillRectangle: (Rectangle center: centro extent: (tamano * 5) @ tamano) color: color.
+			aCanvas fillRectangle: (Rectangle center: centro extent: tamano @ (tamano * 5)) color: color ].
+	^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> dibujarFondoEn: aCanvas [
+	| bandas alto oscuro claro grilla |
+	oscuro := Color r: 20 g: 16 b: 36 range: 255.
+	claro := Color r: 46 g: 40 b: 74 range: 255.
+	bandas := 40.
+	alto := (self height / bandas) ceiling.
+	0 to: bandas - 1 do: [ :indice |
+		aCanvas
+			fillRectangle: ((self left @ (self top + (indice * alto))) extent: self width @ alto)
+			color: (claro mixed: indice / (bandas - 1) with: oscuro) ].
+	grilla := self colorMorado alpha: 0.08.
+	(self left to: self right by: 24) do: [ :x |
+		aCanvas fillRectangle: ((x @ self top) extent: 1 @ self height) color: grilla ].
+	(self top to: self bottom by: 24) do: [ :y |
+		aCanvas fillRectangle: ((self left @ y) extent: self width @ 1) color: grilla ].
+	estrellas ifNotNil: [
+		estrellas do: [ :estrella | self dibujarEstrella: estrella en: aCanvas ] ].
+	^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> dibujarPanel: unRectangulo titulo: unTitulo en: aCanvas [
+	"Tarjeta oscura con borde neon y una etiqueta arriba, como la ficha del personaje"
+	| caja fuente anchoIcono anchoTitulo chip |
+	caja := unRectangulo translateBy: self position.
+	aCanvas fillRectangle: (caja translateBy: 4 @ 4) color: (Color black alpha: 0.35).
+	aCanvas fillRectangle: caja color: (self colorPizarra alpha: 0.92).
+	aCanvas frameRectangle: caja width: 2 color: self colorMorado.
+	fuente := self fuente: 11.
+	anchoIcono := fuente widthOfString: '</>'.
+	anchoTitulo := fuente widthOfString: unTitulo.
+	chip := ((caja left + 12) @ (caja top - 11)) extent: (anchoIcono + anchoTitulo + 24) @ 22.
+	aCanvas fillRectangle: chip color: self colorMorado.
+	aCanvas frameRectangle: chip width: 1 color: self colorCrema.
+	aCanvas drawString: '</>' at: (chip left + 7) @ (chip top + 3) font: fuente color: self colorVerde.
+	aCanvas drawString: unTitulo at: (chip left + anchoIcono + 14) @ (chip top + 3) font: fuente color: Color white.
+	^ self
+
+]
+
+{ #category : 'drawing' }
+InterfazPartida >> drawOn: aCanvas [
+	"Fondo gamer: degradado, grilla neon, pixeles, encabezado y paneles. Los botones y textos se dibujan encima."
+	self dibujarFondoEn: aCanvas.
+	self dibujarEncabezadoEn: aCanvas.
+	self dibujarPanel: (16 @ 84 corner: 236 @ 612) titulo: 'Controles' en: aCanvas.
+	self dibujarPanel: (252 @ 84 corner: 744 @ 612) titulo: 'Partida en curso' en: aCanvas.
+	self dibujarAvatarEn: aCanvas
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> fuente: unTamano [
+	^ LogicalFont familyName: 'Source Sans Pro' pointSize: unTamano
 
 ]
 
@@ -177,8 +371,9 @@ InterfazPartida >> initialize [
     nivelActual := 1.
     nivelMaximo := 1.
     completados := Set new.
-    self extent: 720 @ 590.
-    self color: Color veryLightGray.
+    self extent: 760 @ 628.
+    self color: self colorMarco.
+    self crearEstrellas.
     ^ self
 
 ]
@@ -292,6 +487,7 @@ InterfazPartida >> nuevoTexto: unTexto en: unaPosicion tamano: unTamano [
     | texto |
     texto := (Smalltalk globals at: #StringMorph) new contents: unTexto.
     texto extent: unTamano.
+    texto color: self colorCrema.
     self addMorph: texto.
     texto position: self position + unaPosicion.
     ^ texto
