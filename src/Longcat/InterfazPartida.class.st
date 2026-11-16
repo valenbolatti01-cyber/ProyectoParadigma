@@ -1,21 +1,22 @@
 "
-Presenta Longcat como una ventana Morphic interactiva. Compone controles y casillas visuales, y delega las reglas de juego en Partida.
+Presenta Longcat como una ventana Morphic interactiva con niveles: muestra el nivel actual y los completados, y permite elegir nivel. Compone controles y casillas visuales, y delega las reglas de juego en Partida.
 "
 Class {
 	#name : 'InterfazPartida',
 	#superclass : 'Morph',
 	#instVars : [
 		'partida',
-		'filasConfiguradas',
-		'columnasConfiguradas',
 		'celdas',
-		'textoFilas',
-		'textoColumnas',
 		'textoEstado',
 		'textoLongitud',
 		'textoLibres',
 		'sprites',
-		'imagenesCeldas'
+		'imagenesCeldas',
+		'nivelActual',
+		'nivelMaximo',
+		'completados',
+		'textoNivel',
+		'textoProgreso'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -38,50 +39,33 @@ InterfazPartida >> abrir [
 
 { #category : 'as yet unclassified' }
 InterfazPartida >> actualizarImagenes [
-    | segmentos indice actual anterior siguiente imagen sprite |
-
+    | segmentos indice actual anterior siguiente imagen sprite ultimo |
     segmentos := partida posicionesOcupadas.
     indice := 0.
-
-    "Ocultar todas las imágenes"
-    imagenesCeldas do: [ :cadaImagen |
-        cadaImagen visible: false
-    ].
-
+    imagenesCeldas do: [ :cadaImagen | cadaImagen visible: false ].
     segmentos do: [ :posicion |
         indice := indice + 1.
-
-        imagen := imagenesCeldas at: (
-            ((posicion fila - 1) * partida columnas) +
-            posicion columna
-        ).
-
-        "Dibujar la cabeza"
-        (indice = 1) ifTrue: [
-            imagen form: (
-                (sprites at: #cabezaAbajo) scaledToSize: 32 @ 32
-            ).
-            imagen visible: true
-        ].
-
-        "Dibujar el cuerpo intermedio"
-        ((indice > 1) and: [ indice < segmentos size ]) ifTrue: [
+        imagen := imagenesCeldas at: (((posicion fila - 1) * partida columnas) + posicion columna).
+        indice = 1 ifTrue: [
+            imagen form: ((sprites at: #cabezaAbajo) scaledToSize: 32 @ 32).
+            imagen visible: true ].
+        (indice > 1 and: [ indice < segmentos size ]) ifTrue: [
             anterior := segmentos at: indice - 1.
             actual := segmentos at: indice.
             siguiente := segmentos at: indice + 1.
-
-            sprite := self
-                spritePara: anterior
-                actual: actual
-                siguiente: siguiente.
-
+            sprite := self spritePara: anterior actual: actual siguiente: siguiente.
             sprite ifNotNil: [
                 imagen form: (sprite scaledToSize: 32 @ 32).
-                imagen visible: true
-            ].
-        ].
-    ].
-
+                imagen visible: true ] ] ].
+    segmentos size > 1 ifTrue: [
+        ultimo := segmentos last.
+        anterior := segmentos at: segmentos size - 1.
+        imagen := imagenesCeldas at: ((ultimo fila - 1) * partida columnas) + ultimo columna.
+        sprite := ultimo fila = anterior fila
+            ifTrue: [ sprites at: #cuerpoHorizontal ]
+            ifFalse: [ sprites at: #cuerpoVertical ].
+        imagen form: (sprite scaledToSize: 32 @ 32).
+        imagen visible: true ].
     ^ self
 ]
 
@@ -96,24 +80,13 @@ InterfazPartida >> actualizarVista [
             (celdas at: indice) color: (self colorDe: posicion)
         ]
     ].
-	 self actualizarImagenes .
-    textoEstado contents: (self mensajeEstado).
+    self actualizarImagenes.
+    self registrarVictoria.
+    textoEstado contents: self mensajeEstado.
     textoLongitud contents: 'Longitud: ', partida longitudGato asString.
     textoLibres contents: 'Casillas libres: ', partida cantidadDisponibles asString.
-    ^ self
-]
-
-{ #category : 'private - configuration' }
-InterfazPartida >> aumentarColumnas [
-    columnasConfiguradas < 12 ifTrue: [ columnasConfiguradas := columnasConfiguradas + 1 ].
-    textoColumnas contents: columnasConfiguradas asString.
-    ^ self
-]
-
-{ #category : 'private - configuration' }
-InterfazPartida >> aumentarFilas [
-    filasConfiguradas < 12 ifTrue: [ filasConfiguradas := filasConfiguradas + 1 ].
-    textoFilas contents: filasConfiguradas asString.
+    textoNivel contents: 'Nivel ', nivelActual asString, ' de ', (Smalltalk globals at: #Nivel) cantidad asString.
+    textoProgreso contents: 'Niveles completados: ', self textoCompletados.
     ^ self
 ]
 
@@ -177,36 +150,36 @@ InterfazPartida >> cargarSprites [
 { #category : 'private - rendering' }
 InterfazPartida >> colorDe: unaPosicion [
     unaPosicion = partida posicionCabeza ifTrue: [ ^ Color yellow ].
+    (partida casillaBloqueadaEn: unaPosicion) ifTrue: [ ^ Color darkGray ].
     (partida posicionesOcupadas includes: unaPosicion) ifTrue: [ ^ Color green ].
     ^ Color white
 ]
 
 { #category : 'building' }
 InterfazPartida >> construirControles [
-    | titulo instrucciones |
+    | titulo instrucciones boton |
     titulo := self nuevoTexto: 'LONGCAT' en: 20 @ 18 tamano: 190 @ 32.
     titulo emphasis: (Smalltalk globals at: #TextEmphasis) bold.
-    self nuevoTexto: 'Filas' en: 20 @ 62 tamano: 70 @ 26.
-    textoFilas := self nuevoTexto: filasConfiguradas asString en: 95 @ 62 tamano: 35 @ 26.
-    self nuevoBoton: '-' accion: #disminuirFilas en: 135 @ 58 tamano: 34 @ 32.
-    self nuevoBoton: '+' accion: #aumentarFilas en: 174 @ 58 tamano: 34 @ 32.
-    self nuevoTexto: 'Columnas' en: 20 @ 101 tamano: 75 @ 26.
-    textoColumnas := self nuevoTexto: columnasConfiguradas asString en: 95 @ 101 tamano: 35 @ 26.
-    self nuevoBoton: '-' accion: #disminuirColumnas en: 135 @ 97 tamano: 34 @ 32.
-    self nuevoBoton: '+' accion: #aumentarColumnas en: 174 @ 97 tamano: 34 @ 32.
-    self nuevoBoton: 'Nueva partida' accion: #iniciarNuevaPartida en: 20 @ 143 tamano: 188 @ 36.
-    self nuevoBoton: 'Reiniciar nivel' accion: #reiniciarPartida en: 20 @ 186 tamano: 188 @ 36.
-    self nuevoTexto: 'Mover' en: 20 @ 244 tamano: 188 @ 25.
-    self nuevoBoton: '^' accion: #moverArriba en: 92 @ 273 tamano: 42 @ 38.
-    self nuevoBoton: '<' accion: #moverIzquierda en: 45 @ 315 tamano: 42 @ 38.
-    self nuevoBoton: 'v' accion: #moverAbajo en: 92 @ 315 tamano: 42 @ 38.
-    self nuevoBoton: '>' accion: #moverDerecha en: 139 @ 315 tamano: 42 @ 38.
-    textoEstado := self nuevoTexto: '' en: 20 @ 375 tamano: 205 @ 50.
-    textoLongitud := self nuevoTexto: '' en: 20 @ 430 tamano: 205 @ 26.
-    textoLibres := self nuevoTexto: '' en: 20 @ 458 tamano: 205 @ 26.
+    self nuevoBoton: 'Reiniciar nivel' accion: #reiniciarPartida en: 20 @ 62 tamano: 188 @ 36.
+    self nuevoTexto: 'Mover' en: 20 @ 125 tamano: 188 @ 25.
+    self nuevoBoton: '^' accion: #moverArriba en: 92 @ 155 tamano: 42 @ 38.
+    self nuevoBoton: '<' accion: #moverIzquierda en: 45 @ 197 tamano: 42 @ 38.
+    self nuevoBoton: 'v' accion: #moverAbajo en: 92 @ 197 tamano: 42 @ 38.
+    self nuevoBoton: '>' accion: #moverDerecha en: 139 @ 197 tamano: 42 @ 38.
+    textoEstado := self nuevoTexto: '' en: 20 @ 260 tamano: 205 @ 50.
+    textoLongitud := self nuevoTexto: '' en: 20 @ 320 tamano: 205 @ 26.
+    textoLibres := self nuevoTexto: '' en: 20 @ 348 tamano: 205 @ 26.
     instrucciones := self nuevoTexto: 'Usa los botones para avanzar.
-Cada movimiento llega hasta el bloqueo.' en: 20 @ 510 tamano: 220 @ 55.
+Cada movimiento llega hasta el bloqueo.' en: 20 @ 400 tamano: 220 @ 55.
     instrucciones color: Color darkGray.
+    textoNivel := self nuevoTexto: '' en: 250 @ 18 tamano: 220 @ 26.
+    self nuevoBoton: 'Nivel anterior' accion: #nivelAnterior en: 250 @ 48 tamano: 112 @ 30.
+    self nuevoBoton: 'Siguiente nivel' accion: #siguienteNivel en: 370 @ 48 tamano: 112 @ 30.
+    textoProgreso := self nuevoTexto: '' en: 250 @ 405 tamano: 440 @ 26.
+    self nuevoTexto: 'Ir al nivel (se desbloquea al completar el anterior):' en: 250 @ 435 tamano: 440 @ 26.
+    1 to: (Smalltalk globals at: #Nivel) cantidad do: [ :numero |
+        boton := self nuevoBoton: numero asString accion: #irANivel: en: (250 + ((numero - 1) * 44)) @ 465 tamano: 40 @ 30.
+        boton arguments: (Array with: numero) ].
     ^ self
 ]
 
@@ -245,47 +218,43 @@ InterfazPartida >> construirTablero [
     ^ self
 ]
 
-{ #category : 'private - configuration' }
-InterfazPartida >> disminuirColumnas [
-    columnasConfiguradas > 2 ifTrue: [ columnasConfiguradas := columnasConfiguradas - 1 ].
-    textoColumnas contents: columnasConfiguradas asString.
-    ^ self
-]
-
-{ #category : 'private - configuration' }
-InterfazPartida >> disminuirFilas [
-    filasConfiguradas > 2 ifTrue: [ filasConfiguradas := filasConfiguradas - 1 ].
-    textoFilas contents: filasConfiguradas asString.
-    ^ self
-]
-
 { #category : 'event handling' }
 InterfazPartida >> handlesKeyboard: anEvent [
     ^ true
 ]
 
 { #category : 'actions' }
-InterfazPartida >> iniciarNuevaPartida [
+InterfazPartida >> iniciarNivel: unNumero [
+    nivelActual := unNumero.
     celdas do: [ :celda | self removeMorph: celda ].
     partida := (Smalltalk globals at: #Partida)
-        deFilas: filasConfiguradas
-        columnas: columnasConfiguradas
-        inicio: ((Smalltalk globals at: #Posicion)
-            fila: filasConfiguradas + 1 // 2
-            columna: columnasConfiguradas + 1 // 2).
+        deNivel: ((Smalltalk globals at: #Nivel) nivel: unNumero).
     self construirTablero.
     self actualizarVista.
     ^ self
 ]
 
+{ #category : 'actions' }
+InterfazPartida >> iniciarNuevaPartida [
+    ^ self iniciarNivel: nivelActual
+]
+
 { #category : 'initialization' }
 InterfazPartida >> initialize [
     super initialize.
-    filasConfiguradas := 5.
-    columnasConfiguradas := 7.
     celdas := OrderedCollection new.
+    nivelActual := 1.
+    nivelMaximo := 1.
+    completados := Set new.
     self extent: 720 @ 590.
     self color: Color veryLightGray.
+    ^ self
+]
+
+{ #category : 'actions' }
+InterfazPartida >> irANivel: unNumero [
+    unNumero <= nivelMaximo
+        ifTrue: [ self iniciarNivel: unNumero ].
     ^ self
 ]
 
@@ -315,8 +284,11 @@ InterfazPartida >> keyStroke: anEvent [
 { #category : 'private - rendering' }
 InterfazPartida >> mensajeEstado [
     partida estado = #activa ifTrue: [ ^ 'En juego' ].
-    partida estado = #victoria ifTrue: [ ^ 'Victoria - tablero completo' ].
-    ^ 'Sin movimientos. Reinicia el nivel.' 
+    partida estado = #victoria ifTrue: [
+        nivelActual < (Smalltalk globals at: #Nivel) cantidad
+            ifTrue: [ ^ 'Nivel completado. Pasa al siguiente.' ].
+        ^ 'Completaste todos los niveles' ].
+    ^ 'Sin movimientos. Reinicia el nivel.'
 ]
 
 { #category : 'actions' }
@@ -346,6 +318,13 @@ InterfazPartida >> moverIzquierda [
     ^ self moverCon: ((Smalltalk globals at: #Izquierda) new)
 ]
 
+{ #category : 'actions' }
+InterfazPartida >> nivelAnterior [
+    nivelActual > 1
+        ifTrue: [ self iniciarNivel: nivelActual - 1 ].
+    ^ self
+]
+
 { #category : 'private - building' }
 InterfazPartida >> nuevoBoton: unaEtiqueta accion: unSelector en: unaPosicion tamano: unTamano [
     | boton |
@@ -369,10 +348,27 @@ InterfazPartida >> nuevoTexto: unTexto en: unaPosicion tamano: unTamano [
     ^ texto
 ]
 
+{ #category : 'private - updating' }
+InterfazPartida >> registrarVictoria [
+    | cantidad |
+    partida estado = #victoria ifFalse: [ ^ self ].
+    cantidad := (Smalltalk globals at: #Nivel) cantidad.
+    completados add: nivelActual.
+    nivelMaximo := nivelMaximo max: ((nivelActual + 1) min: cantidad).
+    ^ self
+]
+
 { #category : 'actions' }
 InterfazPartida >> reiniciarPartida [
     partida reiniciar.
     self actualizarVista.
+    ^ self
+]
+
+{ #category : 'actions' }
+InterfazPartida >> siguienteNivel [
+    (nivelActual < (Smalltalk globals at: #Nivel) cantidad and: [ nivelActual < nivelMaximo ])
+        ifTrue: [ self iniciarNivel: nivelActual + 1 ].
     ^ self
 ]
 
@@ -452,4 +448,10 @@ InterfazPartida >> spritePara: anterior actual: actual siguiente: siguiente [
 { #category : 'event handling' }
 InterfazPartida >> takesKeyboardFocus [
     ^ true
+]
+
+{ #category : 'private - updating' }
+InterfazPartida >> textoCompletados [
+    completados isEmpty ifTrue: [ ^ 'ninguno todavia' ].
+    ^ (completados asSortedCollection inject: '' into: [ :texto :numero | texto, numero asString, ' ' ]) trimBoth
 ]
