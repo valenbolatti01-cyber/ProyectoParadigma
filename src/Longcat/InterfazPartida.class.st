@@ -57,37 +57,21 @@ InterfazPartida >> actualizarVista [
 
 { #category : 'as yet unclassified' }
 InterfazPartida >> cargarSprites [
-    | repositorio carpetaSprites |
-
-    repositorio := IceRepository registry
-        detect: [ :cadaRepositorio |
-            cadaRepositorio name = 'ProyectoParadigma'
-        ].
-
-    carpetaSprites := repositorio location / 'assets' / 'sprites'.
-
+    | carpetaSprites archivos |
+    carpetaSprites := (Smalltalk globals at: #LongcatCarpeta ifAbsent: [ FileLocator imageDirectory ])
+        asFileReference / 'assets' / 'sprites'.
+    carpetaSprites exists ifFalse: [
+        ^ self error: 'No encuentro la carpeta de sprites en: ', carpetaSprites fullName ].
+    archivos := {
+        #cabezaAbajo -> 'Gato abajo.png'.
+        #cabezaArriba -> 'Gato arriba.png'.
+        #cabezaDerecha -> 'Gato derecha.png'.
+        #cabezaIzquierda -> 'Gato izquierda.png' }.
     sprites := Dictionary new.
-    "El cuerpo ya no usa imagenes: lo dibuja TableroMorph. Solo se cargan las cabezas."
-
-    sprites at: #cabezaAbajo put:
-        (ImageReadWriter formFromFileNamed:
-            (carpetaSprites / 'Gato abajo.png') fullName).
-
-    sprites at: #cabezaArriba put:
-        (ImageReadWriter formFromFileNamed:
-            (carpetaSprites / 'Gato arriba.png') fullName).
-
-    sprites at: #cabezaDerecha put:
-        (ImageReadWriter formFromFileNamed:
-            (carpetaSprites / 'Gato derecha.png') fullName).
-
-    sprites at: #cabezaIzquierda put:
-        (ImageReadWriter formFromFileNamed:
-            (carpetaSprites / 'Gato izquierda.png') fullName).
-
+    archivos do: [ :par |
+        sprites at: par key put:
+            (ImageReadWriter formFromFileNamed: (carpetaSprites / par value) fullName) ].
     ^ sprites
-
-
 ]
 
 { #category : 'private - victory' }
