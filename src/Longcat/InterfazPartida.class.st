@@ -57,21 +57,23 @@ InterfazPartida >> actualizarVista [
 
 { #category : 'as yet unclassified' }
 InterfazPartida >> cargarSprites [
-    | carpetaSprites archivos |
-    carpetaSprites := (Smalltalk globals at: #LongcatCarpeta ifAbsent: [ FileLocator imageDirectory ])
-        asFileReference / 'assets' / 'sprites'.
-    carpetaSprites exists ifFalse: [
-        ^ self error: 'No encuentro la carpeta de sprites en: ', carpetaSprites fullName ].
+    | raiz archivos |
+    raiz := (Smalltalk globals at: #LongcatCarpeta ifAbsent: [ FileLocator imageDirectory ]) asFileReference.
     archivos := {
         #cabezaAbajo -> 'Gato abajo.png'.
         #cabezaArriba -> 'Gato arriba.png'.
         #cabezaDerecha -> 'Gato derecha.png'.
         #cabezaIzquierda -> 'Gato izquierda.png' }.
     sprites := Dictionary new.
-    archivos do: [ :par |
-        sprites at: par key put:
-            (ImageReadWriter formFromFileNamed: (carpetaSprites / par value) fullName) ].
+    archivos do: [ :par | | archivo |
+        archivo := raiz allChildren
+            detect: [ :hijo | hijo isFile and: [ hijo basename sameAs: par value ] ]
+            ifNone: [ nil ].
+        archivo ifNil: [
+            ^ self error: 'No encuentro ', par value, ' dentro de: ', raiz fullName ].
+        sprites at: par key put: (ImageReadWriter formFromFileNamed: archivo fullName) ].
     ^ sprites
+
 ]
 
 { #category : 'private - victory' }
