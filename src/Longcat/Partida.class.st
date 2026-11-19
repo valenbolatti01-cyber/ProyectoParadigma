@@ -30,12 +30,30 @@ Partida class >> deFilas: unaCantidadDeFilas columnas: unaCantidadDeColumnas ini
         inicio: unaPosicion
 ]
 
+{ #category : 'instance creation' }
+Partida class >> deNivel: unNivel [
+    | nueva |
+    nueva := self
+        deFilas: unNivel filas
+        columnas: unNivel columnas
+        inicio: unNivel inicio.
+    nueva bloquearTodas: unNivel bloqueos.
+    ^ nueva
+]
+
 { #category : 'private - state' }
 Partida >> actualizarEstado [
     (tablero cantidadDisponibles = 0)
         ifTrue: [ estado := #victoria. ^ self ].
     self tieneMovimientosPosibles
         ifFalse: [ estado := #derrota ].
+    ^ self
+]
+
+{ #category : 'changing state' }
+Partida >> bloquearTodas: unasPosiciones [
+    unasPosiciones do: [ :posicion | tablero bloquear: posicion ].
+    self actualizarEstado.
     ^ self
 ]
 
