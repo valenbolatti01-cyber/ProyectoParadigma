@@ -1,9 +1,9 @@
 "
-Presenta Longcat como una ventana Morphic interactiva con niveles: muestra el nivel actual y los completados, y permite elegir nivel. Compone controles y casillas visuales, y delega las reglas de juego en Partida.
+Pantalla de los niveles normales (10 niveles). Hereda de PantallaLongcat el fondo violeta comun del juego. Muestra el nivel actual y los completados, permite elegir nivel, tiene un boton para volver al menu principal y delega las reglas del juego en Partida. Se abre desde LongcatApp (InterfazPartida abrir abre el juego completo).
 "
 Class {
 	#name : 'InterfazPartida',
-	#superclass : 'Morph',
+	#superclass : 'PantallaLongcat',
 	#instVars : [
 		'partida',
 		'vistaTablero',
@@ -17,7 +17,6 @@ Class {
 		'textoNivel',
 		'textoProgreso',
 		'animacion',
-		'estrellas',
 		'avatar',
 		'elementos',
 		'botonesNivel',
@@ -34,7 +33,8 @@ Class {
 
 { #category : 'instance creation' }
 InterfazPartida class >> abrir [
-    ^ self new abrir
+    "Abre el juego completo, empezando por el menu principal"
+    ^ (Smalltalk globals at: #LongcatApp) abrir
 
 ]
 
@@ -51,55 +51,6 @@ InterfazPartida >> abrir [
 
 ]
 
-{ #category : 'as yet unclassified' }
-InterfazPartida >> actualizarImagenes [
-    | segmentos indice actual anterior siguiente imagen sprite |
-
-    segmentos := partida posicionesOcupadas.
-    indice := 0.
-
-    "Ocultar todas las imágenes"
-    imagenesCeldas do: [ :cadaImagen |
-        cadaImagen visible: false
-    ].
-
-    segmentos do: [ :posicion |
-        indice := indice + 1.
-
-        imagen := imagenesCeldas at: (
-            ((posicion fila - 1) * partida columnas) +
-            posicion columna
-        ).
-
-        "Dibujar la cabeza"
-        (indice = 1) ifTrue: [
-            imagen form: (
-                (sprites at: #cabezaAbajo) scaledToSize: 32 @ 32
-            ).
-            imagen visible: true
-        ].
-
-        "Dibujar el cuerpo intermedio"
-        ((indice > 1) and: [ indice < segmentos size ]) ifTrue: [
-            anterior := segmentos at: indice - 1.
-            actual := segmentos at: indice.
-            siguiente := segmentos at: indice + 1.
-
-            sprite := self
-                spritePara: anterior
-                actual: actual
-                siguiente: siguiente.
-
-            sprite ifNotNil: [
-                imagen form: (sprite scaledToSize: 32 @ 32).
-                imagen visible: true
-            ].
-        ].
-    ].
-
-    ^ self
-]
-
 { #category : 'private - updating' }
 InterfazPartida >> actualizarVista [
     vistaTablero changed.
@@ -110,6 +61,15 @@ InterfazPartida >> actualizarVista [
     textoNivel contents: 'Nivel ', nivelActual asString, ' de ', (Smalltalk globals at: #Nivel) cantidad asString.
     textoProgreso contents: 'Niveles completados: ', self textoCompletados.
     self pintarBotonesNivel.
+    ^ self
+
+]
+
+{ #category : 'showing' }
+InterfazPartida >> alMostrarse [
+    "LongcatApp lo llama al entrar a niveles normales. La primera vez arma la partida; despues solo se reacomoda."
+    partida ifNil: [ self prepararPartida ].
+    self reacomodar.
     ^ self
 
 ]
@@ -215,13 +175,6 @@ InterfazPartida >> colorCrema [
 
 ]
 
-{ #category : 'private - rendering' }
-InterfazPartida >> colorDe: unaPosicion [
-    unaPosicion = partida posicionCabeza ifTrue: [ ^ Color yellow ].
-    (partida posicionesOcupadas includes: unaPosicion) ifTrue: [ ^ Color green ].
-    ^ Color white
-]
-
 { #category : 'private - colors' }
 InterfazPartida >> colorLavanda [
 	^ Color r: 190 g: 178 b: 230 range: 255
@@ -258,11 +211,21 @@ InterfazPartida >> colorVerde [
 
 ]
 
+{ #category : 'private - drawing' }
+InterfazPartida >> conEsquinas [
+    "El juego tiene encabezado y paneles: no lleva las esquinas de neon de los menus"
+    ^ false
+
+]
+
 { #category : 'building' }
 InterfazPartida >> construirControles [
     | texto boton |
     elementos := Dictionary new.
     botonesNivel := OrderedCollection new.
+    "Volver al menu principal (solo si el juego se abrio desde LongcatApp)"
+    app ifNotNil: [
+        elementos at: #menu put: (self nuevoBoton: '< Menú principal' accion: #volverAlMenu en: 0 @ 0 tamano: 140 @ 30) ].
     "Panel izquierdo: controles (las posiciones las pone reacomodar)"
     texto := self nuevoTexto: 'Mover' en: 0 @ 0 tamano: 188 @ 22.
     texto color: self colorVerde.
@@ -319,38 +282,31 @@ InterfazPartida >> construirTablero [
 
 ]
 
-{ #category : 'initialization' }
-InterfazPartida >> crearEstrellas [
-    "Pixeles y destellos fijos del fondo (misma semilla, siempre iguales). Las posiciones son proporciones del tamano de la ventana, asi se reparten aunque se agrande."
-    | azar colores |
-    azar := Random seed: 7.
-    colores := { self colorMorado. self colorVerde. self colorCrema. self colorNaranja }.
-    estrellas := (1 to: 90) collect: [ :indice |
-        { (azar next @ azar next).
-          (azar next < 0.8 ifTrue: [ 2 ] ifFalse: [ 3 ]).
-          ((colores at: (indice \\ colores size) + 1) alpha: 0.35 + (azar next * 0.5)).
-          (azar next < 0.7 ifTrue: [ #pixel ] ifFalse: [ #destello ]) } ].
-    ^ self
-
-]
-
 { #category : 'private - drawing' }
 InterfazPartida >> dibujarAvatarEn: aCanvas [
-    "El protagonista abajo del panel de controles; si la ventana es muy baja, no se dibuja"
-    | centroX arriba globo fuente |
-    avatar ifNil: [ ^ self ].
+    "El protagonista con su notebook abajo del panel de controles; si la ventana es muy baja, no se dibuja"
+    | centroX arriba globo fuente figura |
     arriba := self top + self bordeInferiorPaneles - 204.
     arriba < (self top + 372) ifTrue: [ ^ self ].
     centroX := self left + 126.
-    aCanvas
-        fillOval: (Rectangle center: centroX @ (arriba + 58) extent: 136 @ 136)
-        color: (self colorMorado alpha: 0.22).
-    aCanvas translucentImage: avatar at: (centroX - (avatar width // 2)) @ arriba.
-    globo := ((centroX + 38) @ (arriba - 6)) extent: 44 @ 24.
-    aCanvas fillRectangle: globo color: self colorMarco.
-    aCanvas frameRectangle: globo width: 2 color: self colorCrema.
     fuente := self fuente: 11.
-    aCanvas drawString: '</>' at: (globo left + 12) @ (globo top + 4) font: fuente color: self colorVerde.
+    figura := self forma: #protagonista ajustadaA: 184 @ 124.
+    figura
+        ifNotNil: [
+            aCanvas
+                fillOval: (Rectangle center: centroX @ (arriba + 66) extent: 176 @ 120)
+                color: (self colorMorado alpha: 0.18).
+            aCanvas translucentImage: figura at: (centroX - (figura width // 2)) @ (arriba + 124 - figura height) ]
+        ifNil: [
+            avatar ifNil: [ ^ self ].
+            aCanvas
+                fillOval: (Rectangle center: centroX @ (arriba + 58) extent: 136 @ 136)
+                color: (self colorMorado alpha: 0.22).
+            aCanvas translucentImage: avatar at: (centroX - (avatar width // 2)) @ arriba.
+            globo := ((centroX + 38) @ (arriba - 6)) extent: 44 @ 24.
+            aCanvas fillRectangle: globo color: self colorMarco.
+            aCanvas frameRectangle: globo width: 2 color: self colorCrema.
+            aCanvas drawString: '</>' at: (globo left + 12) @ (globo top + 4) font: fuente color: self colorVerde ].
     aCanvas drawString: 'Longcat - Protagonista' at: (self left + 52) @ (arriba + 126) font: fuente color: self colorNaranja.
     aCanvas drawString: 'Nerd, gamer y adicto al cafe' at: (self left + 44) @ (arriba + 146) font: (self fuente: 10) color: self colorLavanda.
     ^ self
@@ -359,69 +315,36 @@ InterfazPartida >> dibujarAvatarEn: aCanvas [
 
 { #category : 'private - drawing' }
 InterfazPartida >> dibujarEncabezadoEn: aCanvas [
-	| franja fuenteTitulo fuenteNota x nota |
-	franja := self topLeft extent: self width @ 70.
-	aCanvas fillRectangle: franja color: (self colorMarco alpha: 0.6).
-	aCanvas fillRectangle: ((self left @ (franja bottom - 3)) extent: self width @ 2) color: self colorMorado.
-	aCanvas fillRectangle: ((self left @ (franja bottom - 1)) extent: self width @ 1) color: self colorVerde.
-	"Titulo con sombra morada"
-	fuenteTitulo := self fuente: 26.
-	x := self left + 20.
-	aCanvas drawString: 'LONGCAT' at: (x + 3) @ (self top + 9) font: fuenteTitulo color: self colorMorado.
-	aCanvas drawString: 'LONGCAT' at: x @ (self top + 6) font: fuenteTitulo color: self colorCrema.
-	x := x + (fuenteTitulo widthOfString: 'LONGCAT') + 2.
-	aCanvas drawString: '.exe' at: x @ (self top + 6) font: fuenteTitulo color: self colorVerde.
-	aCanvas
-		drawString: '<< El gato que llena el tablero >>'
-		at: (self left + 22) @ (self top + 46)
-		font: (self fuente: 10)
-		color: self colorLavanda.
-	"Post-it de la entrega"
-	nota := ((self right - 156) @ (self top + 10)) extent: 130 @ 48.
-	aCanvas fillRectangle: (nota translateBy: 3 @ 3) color: (Color black alpha: 0.4).
-	aCanvas fillRectangle: nota color: self colorCrema.
-	aCanvas fillRectangle: (nota topLeft extent: nota width @ 6) color: self colorNaranja.
-	fuenteNota := self fuente: 11.
-	aCanvas drawString: 'Entrega:' at: (nota left + 10) @ (nota top + 9) font: fuenteNota color: self colorPizarra.
-	aCanvas drawString: 'mañana 23:59' at: (nota left + 10) @ (nota top + 26) font: fuenteNota color: self colorPizarra.
-	^ self
-
-]
-
-{ #category : 'private - drawing' }
-InterfazPartida >> dibujarEstrella: unaEstrella en: aCanvas [
-    | centro tamano color |
-    centro := self position + ((((unaEstrella at: 1) x * self width) rounded) @ (((unaEstrella at: 1) y * self height) rounded)).
-    tamano := unaEstrella at: 2.
-    color := unaEstrella at: 3.
-    (unaEstrella at: 4) = #pixel
-        ifTrue: [ aCanvas fillRectangle: (centro extent: tamano @ tamano) color: color ]
-        ifFalse: [
-            aCanvas fillRectangle: (Rectangle center: centro extent: (tamano * 5) @ tamano) color: color.
-            aCanvas fillRectangle: (Rectangle center: centro extent: tamano @ (tamano * 5)) color: color ].
+    "Franja de arriba con el logo (o el titulo en texto si no esta el PNG) y el post-it"
+    | franja logo fuenteTitulo fuenteNota x nota |
+    franja := self topLeft extent: self width @ 70.
+    aCanvas fillRectangle: franja color: (EstiloLongcat colorMarco alpha: 0.55).
+    aCanvas fillRectangle: ((self left @ (franja bottom - 3)) extent: self width @ 2) color: self colorMorado.
+    aCanvas fillRectangle: ((self left @ (franja bottom - 1)) extent: self width @ 1) color: self colorVerde.
+    logo := self forma: #logo ajustadaA: 300 @ 58.
+    logo
+        ifNotNil: [ aCanvas translucentImage: logo at: (self left + 16) @ (self top + 6 + ((58 - logo height) // 2)) ]
+        ifNil: [
+            fuenteTitulo := self fuente: 26.
+            x := self left + 20.
+            aCanvas drawString: 'LONGCAT' at: (x + 3) @ (self top + 9) font: fuenteTitulo color: self colorMorado.
+            aCanvas drawString: 'LONGCAT' at: x @ (self top + 6) font: fuenteTitulo color: self colorCrema.
+            x := x + (fuenteTitulo widthOfString: 'LONGCAT') + 2.
+            aCanvas drawString: '.exe' at: x @ (self top + 6) font: fuenteTitulo color: self colorVerde.
+            aCanvas
+                drawString: '<< El gato que llena el tablero >>'
+                at: (self left + 22) @ (self top + 46)
+                font: (self fuente: 10)
+                color: self colorLavanda ].
+    "Post-it de la entrega"
+    nota := ((self right - 156) @ (self top + 10)) extent: 130 @ 48.
+    aCanvas fillRectangle: (nota translateBy: 3 @ 3) color: (Color black alpha: 0.4).
+    aCanvas fillRectangle: nota color: self colorCrema.
+    aCanvas fillRectangle: (nota topLeft extent: nota width @ 6) color: self colorNaranja.
+    fuenteNota := self fuente: 11.
+    aCanvas drawString: 'Entrega:' at: (nota left + 10) @ (nota top + 9) font: fuenteNota color: self colorPizarra.
+    aCanvas drawString: 'mañana 23:59' at: (nota left + 10) @ (nota top + 26) font: fuenteNota color: self colorPizarra.
     ^ self
-
-]
-
-{ #category : 'private - drawing' }
-InterfazPartida >> dibujarFondoEn: aCanvas [
-	| bandas alto oscuro claro grilla |
-	oscuro := Color r: 20 g: 16 b: 36 range: 255.
-	claro := Color r: 46 g: 40 b: 74 range: 255.
-	bandas := 40.
-	alto := (self height / bandas) ceiling.
-	0 to: bandas - 1 do: [ :indice |
-		aCanvas
-			fillRectangle: ((self left @ (self top + (indice * alto))) extent: self width @ alto)
-			color: (claro mixed: indice / (bandas - 1) with: oscuro) ].
-	grilla := self colorMorado alpha: 0.08.
-	(self left to: self right by: 24) do: [ :x |
-		aCanvas fillRectangle: ((x @ self top) extent: 1 @ self height) color: grilla ].
-	(self top to: self bottom by: 24) do: [ :y |
-		aCanvas fillRectangle: ((self left @ y) extent: self width @ 1) color: grilla ].
-	estrellas ifNotNil: [
-		estrellas do: [ :estrella | self dibujarEstrella: estrella en: aCanvas ] ].
-	^ self
 
 ]
 
@@ -443,21 +366,21 @@ InterfazPartida >> dibujarMarcaDeAguaEn: aCanvas [
 
 { #category : 'private - drawing' }
 InterfazPartida >> dibujarPanel: unRectangulo titulo: unTitulo en: aCanvas [
-	"Tarjeta oscura con borde neon y una etiqueta arriba, como la ficha del personaje"
-	| caja fuente anchoIcono anchoTitulo chip |
-	caja := unRectangulo translateBy: self position.
-	aCanvas fillRectangle: (caja translateBy: 4 @ 4) color: (Color black alpha: 0.35).
-	aCanvas fillRectangle: caja color: (self colorPizarra alpha: 0.92).
-	aCanvas frameRectangle: caja width: 2 color: self colorMorado.
-	fuente := self fuente: 11.
-	anchoIcono := fuente widthOfString: '</>'.
-	anchoTitulo := fuente widthOfString: unTitulo.
-	chip := ((caja left + 12) @ (caja top - 11)) extent: (anchoIcono + anchoTitulo + 24) @ 22.
-	aCanvas fillRectangle: chip color: self colorMorado.
-	aCanvas frameRectangle: chip width: 1 color: self colorCrema.
-	aCanvas drawString: '</>' at: (chip left + 7) @ (chip top + 3) font: fuente color: self colorVerde.
-	aCanvas drawString: unTitulo at: (chip left + anchoIcono + 14) @ (chip top + 3) font: fuente color: Color white.
-	^ self
+    "Tarjeta violeta con borde neon y una etiqueta arriba (mismos tonos que los menus)"
+    | caja fuente anchoIcono anchoTitulo chip |
+    caja := unRectangulo translateBy: self position.
+    aCanvas fillRectangle: (caja translateBy: 4 @ 4) color: (Color black alpha: 0.35).
+    aCanvas fillRectangle: caja color: (EstiloLongcat colorTarjeta alpha: 0.92).
+    aCanvas frameRectangle: caja width: 2 color: self colorMorado.
+    fuente := self fuente: 11.
+    anchoIcono := fuente widthOfString: '</>'.
+    anchoTitulo := fuente widthOfString: unTitulo.
+    chip := ((caja left + 12) @ (caja top - 11)) extent: (anchoIcono + anchoTitulo + 24) @ 22.
+    aCanvas fillRectangle: chip color: self colorMorado.
+    aCanvas frameRectangle: chip width: 1 color: self colorCrema.
+    aCanvas drawString: '</>' at: (chip left + 7) @ (chip top + 3) font: fuente color: self colorVerde.
+    aCanvas drawString: unTitulo at: (chip left + anchoIcono + 14) @ (chip top + 3) font: fuente color: Color white.
+    ^ self
 
 ]
 
@@ -527,9 +450,8 @@ InterfazPartida >> initialize [
     nivelActual := 1.
     nivelMaximo := 1.
     completados := Set new.
-    self extent: 800 @ 680.
-    self color: self colorMarco.
-    self crearEstrellas.
+    self extent: 1040 @ 660.
+    self color: EstiloLongcat colorFondoArriba.
     ^ self
 
 ]
@@ -563,8 +485,9 @@ InterfazPartida >> keyDown: anEvent [
 
 { #category : 'event handling' }
 InterfazPartida >> keyStroke: anEvent [
-    self inform: 'Recibí una pulsación de teclado'.
-    ^ true
+    "Las flechas se manejan en keyDown:"
+    ^ false
+
 ]
 
 { #category : 'private - rendering' }
@@ -691,6 +614,18 @@ InterfazPartida >> pintarBotonesNivel [
 
 ]
 
+{ #category : 'showing' }
+InterfazPartida >> prepararPartida [
+    "Usa las imagenes que ya cargo LongcatApp; si se abre sola, las busca como antes"
+    app ifNotNil: [ :unaApp | sprites := unaApp spritesDelGato ].
+    (sprites isNil or: [ sprites size < 4 ]) ifTrue: [ self cargarSprites ].
+    avatar := (sprites at: #cabezaAbajo) scaledToSize: 116 @ 116.
+    self construirControles.
+    self iniciarNuevaPartida.
+    ^ self
+
+]
+
 { #category : 'private - layout' }
 InterfazPartida >> reacomodar [
     "Reubica todo segun el tamano actual de la ventana: paneles, botones, textos y el monitor del tablero"
@@ -700,6 +635,9 @@ InterfazPartida >> reacomodar [
     abajo := self bordeInferiorPaneles.
     izquierdaDer := 252.
     anchoPanel := self bordeDerechoPaneles - izquierdaDer.
+    "Encabezado: boton para volver al menu, a la izquierda del post-it"
+    (elementos includesKey: #menu) ifTrue: [
+        self colocar: #menu en: ((self width - 318) max: 330) @ 20 ].
     "Panel izquierdo"
     self colocar: #mover en: 30 @ 114.
     self colocar: #arriba en: 105 @ 138.
@@ -728,7 +666,7 @@ InterfazPartida >> reacomodar [
         areaAncho := anchoPanel - 32.
         areaAlto := ((abajo - 124) - 140) max: 150.
         vistaTablero ajustarA: areaAncho @ areaAlto sprites: sprites.
-                posicionTablero := (izquierdaDer + 16 + ((areaAncho - vistaTablero width) // 2))
+        posicionTablero := (izquierdaDer + 16 + ((areaAncho - vistaTablero width) // 2))
             @ (140 + (((areaAlto - vistaTablero height) // 2) max: 0)).
         vistaTablero position: self position + posicionTablero ].
     self changed.
@@ -783,79 +721,6 @@ InterfazPartida >> siguienteNivel [
 
 ]
 
-{ #category : 'as yet unclassified' }
-InterfazPartida >> spriteEntre: posicionA y: posicionB [
-    (posicionA fila = posicionB fila) ifTrue: [
-        ^ sprites at: #cuerpoHorizontal
-    ].
-
-    (posicionA columna = posicionB columna) ifTrue: [
-        ^ sprites at: #cuerpoVertical
-    ].
-]
-
-{ #category : 'as yet unclassified' }
-InterfazPartida >> spritePara: anterior actual: actual siguiente: siguiente [
-
-    ((anterior fila = actual fila) and: [
-        actual fila = siguiente fila
-    ]) ifTrue: [
-        ^ sprites at: #cuerpoHorizontal
-    ].
-
-    ((anterior columna = actual columna) and: [
-        actual columna = siguiente columna
-    ]) ifTrue: [
-        ^ sprites at: #cuerpoVertical
-    ].
-
-    "Curva arriba-derecha"
-    (((anterior fila < actual fila) and: [
-        siguiente columna > actual columna
-    ]) or: [
-        (siguiente fila < actual fila) and: [
-            anterior columna > actual columna
-        ]
-    ]) ifTrue: [
-        ^ sprites at: #curvaArribaDerecha
-    ].
-
-    "Curva arriba-izquierda"
-    (((anterior fila < actual fila) and: [
-        siguiente columna < actual columna
-    ]) or: [
-        (siguiente fila < actual fila) and: [
-            anterior columna < actual columna
-        ]
-    ]) ifTrue: [
-        ^ sprites at: #curvaArribaIzquierda
-    ].
-
-    "Curva izquierda-abajo"
-    (((anterior columna < actual columna) and: [
-        siguiente fila > actual fila
-    ]) or: [
-        (siguiente columna < actual columna) and: [
-            anterior fila > actual fila
-        ]
-    ]) ifTrue: [
-        ^ sprites at: #curvaIzquierdaAbajo
-    ].
-
-    "Curva derecha-abajo"
-    (((anterior columna > actual columna) and: [
-        siguiente fila > actual fila
-    ]) or: [
-        (siguiente columna > actual columna) and: [
-            anterior fila > actual fila
-        ]
-    ]) ifTrue: [
-        ^ sprites at: #curvaDerechaAbajo
-    ].
-
-    ^ nil
-]
-
 { #category : 'stepping' }
 InterfazPartida >> step [
     self extent = ultimoTamano ifFalse: [ self reacomodar ].
@@ -903,5 +768,25 @@ InterfazPartida >> terminarVictoria [
 InterfazPartida >> textoCompletados [
     completados isEmpty ifTrue: [ ^ 'ninguno todavia' ].
     ^ (completados asSortedCollection inject: '' into: [ :texto :numero | texto, numero asString, ' ' ]) trimBoth
+
+]
+
+{ #category : 'showing' }
+InterfazPartida >> usarSprites: unosSprites [
+    "Cambio de skin: el tablero vuelve a escalar las cabezas con las imagenes nuevas"
+    sprites := unosSprites.
+    avatar := (sprites at: #cabezaAbajo) scaledToSize: 116 @ 116.
+    elementos ifNotNil: [ self reacomodar ].
+    ^ self
+
+]
+
+{ #category : 'actions' }
+InterfazPartida >> volverAlMenu [
+    "No se puede salir en medio de la animacion de victoria o derrota"
+    animacion ifNotNil: [ ^ self ].
+    sacudidaInicio := nil.
+    app ifNotNil: [ :unaApp | unaApp irAlMenu ].
+    ^ self
 
 ]
