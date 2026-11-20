@@ -18,7 +18,15 @@ Class {
 		'textoProgreso',
 		'animacion',
 		'estrellas',
-		'avatar'
+		'avatar',
+		'elementos',
+		'botonesNivel',
+		'textoAviso',
+		'avisoHasta',
+		'ultimoTamano',
+		'sacudidaInicio',
+		'sacudidaVertical',
+		'posicionTablero'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -32,13 +40,14 @@ InterfazPartida class >> abrir [
 
 { #category : 'opening' }
 InterfazPartida >> abrir [
-	self cargarSprites.
-	avatar := (sprites at: #cabezaAbajo) scaledToSize: 116 @ 116.
-	self construirControles.
-	self iniciarNuevaPartida.
-	self openInWindowLabeled: 'Longcat.exe'.
-	self takeKeyboardFocus.
-	^ self
+    self cargarSprites.
+    avatar := (sprites at: #cabezaAbajo) scaledToSize: 116 @ 116.
+    self construirControles.
+    self iniciarNuevaPartida.
+    self openInWindowLabeled: 'Longcat.exe'.
+    self startStepping.
+    self takeKeyboardFocus.
+    ^ self
 
 ]
 
@@ -51,7 +60,41 @@ InterfazPartida >> actualizarVista [
     textoLibres contents: 'Casillas libres: ', partida cantidadDisponibles asString.
     textoNivel contents: 'Nivel ', nivelActual asString, ' de ', (Smalltalk globals at: #Nivel) cantidad asString.
     textoProgreso contents: 'Niveles completados: ', self textoCompletados.
+    self pintarBotonesNivel.
     ^ self
+
+]
+
+{ #category : 'private - shake' }
+InterfazPartida >> avanzarSacudida [
+    "Terremoto corto: el monitor vibra en el sentido del golpe y se va calmando"
+    | transcurrido fuerza desvio cruce |
+    sacudidaInicio ifNil: [ ^ self ].
+    vistaTablero ifNil: [ ^ self ].
+    transcurrido := Time millisecondClockValue - sacudidaInicio.
+    transcurrido >= 380 ifTrue: [
+        sacudidaInicio := nil.
+        vistaTablero position: self position + posicionTablero.
+        ^ self ].
+    fuerza := 9 * (1 - (transcurrido / 380)).
+    desvio := (((transcurrido / 24.0) * Float pi) sin * fuerza) rounded.
+    cruce := ((transcurrido // 30) even ifTrue: [ 1 ] ifFalse: [ -1 ]) * (fuerza / 4) rounded.
+    vistaTablero position: self position + posicionTablero + (sacudidaVertical
+        ifTrue: [ cruce @ desvio ]
+        ifFalse: [ desvio @ cruce ]).
+    ^ self
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> bordeDerechoPaneles [
+    ^ (self width - 16) max: 520
+
+]
+
+{ #category : 'private - drawing' }
+InterfazPartida >> bordeInferiorPaneles [
+    ^ (self height - 36) max: 420
 
 ]
 
@@ -92,6 +135,13 @@ InterfazPartida >> celebrarVictoria [
         alTerminar: [ self terminarVictoria ].
     self addMorph: animacion.
     animacion startStepping.
+    ^ self
+
+]
+
+{ #category : 'private - layout' }
+InterfazPartida >> colocar: unaClave en: unPunto [
+    (elementos at: unaClave) position: self position + unPunto.
     ^ self
 
 ]
@@ -141,83 +191,99 @@ InterfazPartida >> colorVerde [
 { #category : 'building' }
 InterfazPartida >> construirControles [
     | texto boton |
-    "Panel izquierdo: controles"
-    self nuevoBoton: 'Reiniciar nivel' accion: #reiniciarPartida en: 30 @ 104 tamano: 192 @ 34.
-    texto := self nuevoTexto: 'Mover' en: 30 @ 150 tamano: 188 @ 22.
+    elementos := Dictionary new.
+    botonesNivel := OrderedCollection new.
+    "Panel izquierdo: controles (las posiciones las pone reacomodar)"
+    texto := self nuevoTexto: 'Mover' en: 0 @ 0 tamano: 188 @ 22.
     texto color: self colorVerde.
-    self nuevoBoton: '^' accion: #moverArriba en: 105 @ 174 tamano: 42 @ 38.
-    self nuevoBoton: '<' accion: #moverIzquierda en: 58 @ 216 tamano: 42 @ 38.
-    self nuevoBoton: 'v' accion: #moverAbajo en: 105 @ 216 tamano: 42 @ 38.
-    self nuevoBoton: '>' accion: #moverDerecha en: 152 @ 216 tamano: 42 @ 38.
-    textoEstado := self nuevoTexto: '' en: 30 @ 274 tamano: 200 @ 22.
+    elementos at: #mover put: texto.
+    elementos at: #arriba put: (self nuevoBoton: '^' accion: #moverArriba en: 0 @ 0 tamano: 42 @ 38).
+    elementos at: #izquierda put: (self nuevoBoton: '<' accion: #moverIzquierda en: 0 @ 0 tamano: 42 @ 38).
+    elementos at: #abajo put: (self nuevoBoton: 'v' accion: #moverAbajo en: 0 @ 0 tamano: 42 @ 38).
+    elementos at: #derecha put: (self nuevoBoton: '>' accion: #moverDerecha en: 0 @ 0 tamano: 42 @ 38).
+    textoEstado := self nuevoTexto: '' en: 0 @ 0 tamano: 200 @ 22.
     textoEstado color: self colorVerde.
-    textoLongitud := self nuevoTexto: '' en: 30 @ 302 tamano: 200 @ 22.
-    textoLibres := self nuevoTexto: '' en: 30 @ 324 tamano: 200 @ 22.
-    texto := self nuevoTexto: 'Usa los botones o las flechas.' en: 30 @ 356 tamano: 200 @ 20.
+    elementos at: #estado put: textoEstado.
+    textoLongitud := self nuevoTexto: '' en: 0 @ 0 tamano: 200 @ 22.
+    elementos at: #longitud put: textoLongitud.
+    textoLibres := self nuevoTexto: '' en: 0 @ 0 tamano: 200 @ 22.
+    elementos at: #libres put: textoLibres.
+    texto := self nuevoTexto: 'Usa los botones o las flechas.' en: 0 @ 0 tamano: 200 @ 20.
     texto color: self colorLavanda.
-    texto := self nuevoTexto: 'Cada movimiento va hasta chocar.' en: 30 @ 374 tamano: 200 @ 20.
+    elementos at: #ayuda1 put: texto.
+    texto := self nuevoTexto: 'Cada movimiento va hasta chocar.' en: 0 @ 0 tamano: 200 @ 20.
     texto color: self colorLavanda.
+    elementos at: #ayuda2 put: texto.
     "Panel derecho: nivel y monitor"
-    textoNivel := self nuevoTexto: '' en: 268 @ 102 tamano: 220 @ 26.
+    textoNivel := self nuevoTexto: '' en: 0 @ 0 tamano: 220 @ 26.
     textoNivel font: (self fuente: 14).
     textoNivel color: self colorNaranja.
-    self nuevoBoton: 'Nivel anterior' accion: #nivelAnterior en: 520 @ 100 tamano: 104 @ 30.
-    self nuevoBoton: 'Siguiente nivel' accion: #siguienteNivel en: 632 @ 100 tamano: 104 @ 30.
-    textoProgreso := self nuevoTexto: '' en: 268 @ 522 tamano: 460 @ 20.
-    texto := self nuevoTexto: 'Ir al nivel (se desbloquea al completar el anterior):' en: 268 @ 542 tamano: 460 @ 20.
+    elementos at: #nivel put: textoNivel.
+    elementos at: #anterior put: (self nuevoBoton: 'Nivel anterior' accion: #nivelAnterior en: 0 @ 0 tamano: 104 @ 30).
+    elementos at: #siguiente put: (self nuevoBoton: 'Siguiente nivel' accion: #siguienteNivel en: 0 @ 0 tamano: 104 @ 30).
+    textoAviso := self nuevoTexto: '' en: 0 @ 0 tamano: 460 @ 22.
+    textoAviso font: (self fuente: 12).
+    textoAviso color: (Color r: 255 g: 105 b: 120 range: 255).
+    elementos at: #aviso put: textoAviso.
+    textoProgreso := self nuevoTexto: '' en: 0 @ 0 tamano: 460 @ 20.
+    elementos at: #progreso put: textoProgreso.
+    texto := self nuevoTexto: 'Ir al nivel (se desbloquea al completar el anterior):' en: 0 @ 0 tamano: 460 @ 20.
     texto color: self colorLavanda.
+    elementos at: #irA put: texto.
     1 to: (Smalltalk globals at: #Nivel) cantidad do: [ :numero |
-        boton := self nuevoBoton: numero asString accion: #irANivel: en: (268 + ((numero - 1) * 46)) @ 566 tamano: 40 @ 30.
-        boton arguments: (Array with: numero) ].
+        boton := self nuevoBoton: numero asString accion: #irANivel: en: 0 @ 0 tamano: 40 @ 30.
+        boton arguments: (Array with: numero).
+        botonesNivel add: boton ].
+    self reacomodar.
     ^ self
 
 ]
 
 { #category : 'private - building' }
 InterfazPartida >> construirTablero [
-    "Un solo morph dibuja el monitor, el tablero y el gato continuo (ver TableroMorph).
-     Se centra dentro del panel de la derecha."
+    "Un solo morph dibuja el monitor, el tablero y el gato continuo (ver TableroMorph). Su tamano y posicion los decide reacomodar."
     vistaTablero := (Smalltalk globals at: #TableroMorph) partida: partida sprites: sprites.
     self addMorph: vistaTablero.
-    vistaTablero position: self position + ((498 - (vistaTablero width // 2)) @ 146).
+    self reacomodar.
     ^ self
 
 ]
 
 { #category : 'initialization' }
 InterfazPartida >> crearEstrellas [
-	"Pixeles y destellos fijos del fondo (misma semilla, siempre iguales)"
-	| azar colores |
-	azar := Random seed: 7.
-	colores := { self colorMorado. self colorVerde. self colorCrema. self colorNaranja }.
-	estrellas := (1 to: 90) collect: [ :indice |
-		{ ((azar next * 760) rounded @ (azar next * 628) rounded).
-		  (azar next < 0.8 ifTrue: [ 2 ] ifFalse: [ 3 ]).
-		  ((colores at: (indice \\ colores size) + 1) alpha: 0.35 + (azar next * 0.5)).
-		  (azar next < 0.7 ifTrue: [ #pixel ] ifFalse: [ #destello ]) } ].
-	^ self
+    "Pixeles y destellos fijos del fondo (misma semilla, siempre iguales). Las posiciones son proporciones del tamano de la ventana, asi se reparten aunque se agrande."
+    | azar colores |
+    azar := Random seed: 7.
+    colores := { self colorMorado. self colorVerde. self colorCrema. self colorNaranja }.
+    estrellas := (1 to: 90) collect: [ :indice |
+        { (azar next @ azar next).
+          (azar next < 0.8 ifTrue: [ 2 ] ifFalse: [ 3 ]).
+          ((colores at: (indice \\ colores size) + 1) alpha: 0.35 + (azar next * 0.5)).
+          (azar next < 0.7 ifTrue: [ #pixel ] ifFalse: [ #destello ]) } ].
+    ^ self
 
 ]
 
 { #category : 'private - drawing' }
 InterfazPartida >> dibujarAvatarEn: aCanvas [
-	"El protagonista en la parte de abajo del panel de controles"
-	| centroX arriba globo fuente |
-	avatar ifNil: [ ^ self ].
-	centroX := self left + 126.
-	arriba := self top + 408.
-	aCanvas
-		fillOval: (Rectangle center: centroX @ (arriba + 58) extent: 136 @ 136)
-		color: (self colorMorado alpha: 0.22).
-	aCanvas translucentImage: avatar at: (centroX - (avatar width // 2)) @ arriba.
-	globo := ((centroX + 38) @ (arriba - 6)) extent: 44 @ 24.
-	aCanvas fillRectangle: globo color: self colorMarco.
-	aCanvas frameRectangle: globo width: 2 color: self colorCrema.
-	fuente := self fuente: 11.
-	aCanvas drawString: '</>' at: (globo left + 12) @ (globo top + 4) font: fuente color: self colorVerde.
-	aCanvas drawString: 'Longcat - Protagonista' at: (self left + 52) @ (arriba + 126) font: fuente color: self colorNaranja.
-	aCanvas drawString: 'Nerd, gamer y adicto al cafe' at: (self left + 44) @ (arriba + 146) font: (self fuente: 10) color: self colorLavanda.
-	^ self
+    "El protagonista abajo del panel de controles; si la ventana es muy baja, no se dibuja"
+    | centroX arriba globo fuente |
+    avatar ifNil: [ ^ self ].
+    arriba := self top + self bordeInferiorPaneles - 204.
+    arriba < (self top + 372) ifTrue: [ ^ self ].
+    centroX := self left + 126.
+    aCanvas
+        fillOval: (Rectangle center: centroX @ (arriba + 58) extent: 136 @ 136)
+        color: (self colorMorado alpha: 0.22).
+    aCanvas translucentImage: avatar at: (centroX - (avatar width // 2)) @ arriba.
+    globo := ((centroX + 38) @ (arriba - 6)) extent: 44 @ 24.
+    aCanvas fillRectangle: globo color: self colorMarco.
+    aCanvas frameRectangle: globo width: 2 color: self colorCrema.
+    fuente := self fuente: 11.
+    aCanvas drawString: '</>' at: (globo left + 12) @ (globo top + 4) font: fuente color: self colorVerde.
+    aCanvas drawString: 'Longcat - Protagonista' at: (self left + 52) @ (arriba + 126) font: fuente color: self colorNaranja.
+    aCanvas drawString: 'Nerd, gamer y adicto al cafe' at: (self left + 44) @ (arriba + 146) font: (self fuente: 10) color: self colorLavanda.
+    ^ self
 
 ]
 
@@ -254,16 +320,16 @@ InterfazPartida >> dibujarEncabezadoEn: aCanvas [
 
 { #category : 'private - drawing' }
 InterfazPartida >> dibujarEstrella: unaEstrella en: aCanvas [
-	| centro tamano color |
-	centro := self position + (unaEstrella at: 1).
-	tamano := unaEstrella at: 2.
-	color := unaEstrella at: 3.
-	(unaEstrella at: 4) = #pixel
-		ifTrue: [ aCanvas fillRectangle: (centro extent: tamano @ tamano) color: color ]
-		ifFalse: [
-			aCanvas fillRectangle: (Rectangle center: centro extent: (tamano * 5) @ tamano) color: color.
-			aCanvas fillRectangle: (Rectangle center: centro extent: tamano @ (tamano * 5)) color: color ].
-	^ self
+    | centro tamano color |
+    centro := self position + ((((unaEstrella at: 1) x * self width) rounded) @ (((unaEstrella at: 1) y * self height) rounded)).
+    tamano := unaEstrella at: 2.
+    color := unaEstrella at: 3.
+    (unaEstrella at: 4) = #pixel
+        ifTrue: [ aCanvas fillRectangle: (centro extent: tamano @ tamano) color: color ]
+        ifFalse: [
+            aCanvas fillRectangle: (Rectangle center: centro extent: (tamano * 5) @ tamano) color: color.
+            aCanvas fillRectangle: (Rectangle center: centro extent: tamano @ (tamano * 5)) color: color ].
+    ^ self
 
 ]
 
@@ -290,6 +356,22 @@ InterfazPartida >> dibujarFondoEn: aCanvas [
 ]
 
 { #category : 'private - drawing' }
+InterfazPartida >> dibujarMarcaDeAguaEn: aCanvas [
+    "Marca de agua centrada abajo de todo"
+    | texto fuente ancho |
+    texto := 'UTN FRRe - Paradigmas de Programación - Grupo 33'.
+    fuente := self fuente: 10.
+    ancho := fuente widthOfString: texto.
+    aCanvas
+        drawString: texto
+        at: (self center x - (ancho // 2)) @ (self bottom - 24)
+        font: fuente
+        color: (self colorLavanda alpha: 0.75).
+    ^ self
+
+]
+
+{ #category : 'private - drawing' }
 InterfazPartida >> dibujarPanel: unRectangulo titulo: unTitulo en: aCanvas [
 	"Tarjeta oscura con borde neon y una etiqueta arriba, como la ficha del personaje"
 	| caja fuente anchoIcono anchoTitulo chip |
@@ -311,12 +393,13 @@ InterfazPartida >> dibujarPanel: unRectangulo titulo: unTitulo en: aCanvas [
 
 { #category : 'drawing' }
 InterfazPartida >> drawOn: aCanvas [
-	"Fondo gamer: degradado, grilla neon, pixeles, encabezado y paneles. Los botones y textos se dibujan encima."
-	self dibujarFondoEn: aCanvas.
-	self dibujarEncabezadoEn: aCanvas.
-	self dibujarPanel: (16 @ 84 corner: 236 @ 612) titulo: 'Controles' en: aCanvas.
-	self dibujarPanel: (252 @ 84 corner: 744 @ 612) titulo: 'Partida en curso' en: aCanvas.
-	self dibujarAvatarEn: aCanvas
+    "Fondo gamer: degradado, grilla neon, pixeles, encabezado y paneles. Los paneles se estiran con la ventana."
+    self dibujarFondoEn: aCanvas.
+    self dibujarEncabezadoEn: aCanvas.
+    self dibujarPanel: (16 @ 84 corner: 236 @ self bordeInferiorPaneles) titulo: 'Controles' en: aCanvas.
+    self dibujarPanel: (252 @ 84 corner: self bordeDerechoPaneles @ self bordeInferiorPaneles) titulo: 'Partida en curso' en: aCanvas.
+    self dibujarAvatarEn: aCanvas.
+    self dibujarMarcaDeAguaEn: aCanvas
 
 ]
 
@@ -335,6 +418,9 @@ InterfazPartida >> handlesKeyboard: anEvent [
 { #category : 'actions' }
 InterfazPartida >> iniciarNivel: unNumero [
     nivelActual := unNumero.
+    sacudidaInicio := nil.
+    avisoHasta := nil.
+    textoAviso contents: ''.
     animacion ifNotNil: [ :anterior | anterior delete. animacion := nil ].
     vistaTablero ifNotNil: [ :vista | vista delete ].
     partida := (Smalltalk globals at: #Partida)
@@ -357,7 +443,7 @@ InterfazPartida >> initialize [
     nivelActual := 1.
     nivelMaximo := 1.
     completados := Set new.
-    self extent: 760 @ 628.
+    self extent: 800 @ 680.
     self color: self colorMarco.
     self crearEstrellas.
     ^ self
@@ -367,7 +453,8 @@ InterfazPartida >> initialize [
 { #category : 'actions' }
 InterfazPartida >> irANivel: unNumero [
     unNumero <= nivelMaximo
-        ifTrue: [ self iniciarNivel: unNumero ].
+        ifTrue: [ ^ self iniciarNivel: unNumero ].
+    self mostrarAviso: 'Nivel ', unNumero asString, ' bloqueado: completa primero el nivel ', nivelMaximo asString.
     ^ self
 
 ]
@@ -404,7 +491,30 @@ InterfazPartida >> mensajeEstado [
         nivelActual < (Smalltalk globals at: #Nivel) cantidad
             ifTrue: [ ^ 'Nivel completado. Pasando al siguiente...' ].
         ^ 'Completaste todos los niveles' ].
-    ^ 'Sin movimientos. Reinicia el nivel.'
+    ^ 'Sin espacio. Reiniciando el nivel...'
+
+]
+
+{ #category : 'private - messages' }
+InterfazPartida >> mostrarAviso: unTexto [
+    "Mensaje corto en rojo que se borra solo a los pocos segundos"
+    textoAviso contents: unTexto.
+    avisoHasta := Time millisecondClockValue + 3500.
+    ^ self
+
+]
+
+{ #category : 'private - defeat' }
+InterfazPartida >> mostrarDerrota [
+    animacion := (Smalltalk globals at: #DerrotaMorph)
+        sobre: self
+        centro: vistaTablero pantalla center
+        mensaje: 'SIN ESPACIO'
+        detalle: 'Error 404: camino no encontrado'
+        alTerminar: [ self terminarDerrota ].
+    self addMorph: animacion.
+    animacion startStepping.
+    ^ self
 
 ]
 
@@ -422,14 +532,18 @@ InterfazPartida >> moverArriba [
 
 { #category : 'private - actions' }
 InterfazPartida >> moverCon: unaDireccion [
-    | estabaActiva |
+    | estabaActiva antes |
     animacion ifNotNil: [ ^ self ].
     estabaActiva := partida estado = #activa.
+    antes := partida posicionCabeza fila @ partida posicionCabeza columna.
     partida moverEn: unaDireccion.
     self actualizarVista.
-    "Solo se celebra en el movimiento que gana, no en cada tecla despues"
-    (estabaActiva and: [ partida estado = #victoria ])
-        ifTrue: [ self celebrarVictoria ].
+    "Solo se celebra o se pierde en el movimiento que lo causa, no en cada tecla despues"
+    (estabaActiva and: [ partida estado = #victoria ]) ifTrue: [ ^ self celebrarVictoria ].
+    (estabaActiva and: [ partida estado = #derrota ]) ifTrue: [ ^ self mostrarDerrota ].
+    "Si el gato no se pudo mover, tiembla el monitor"
+    (estabaActiva and: [ antes = (partida posicionCabeza fila @ partida posicionCabeza columna) ])
+        ifTrue: [ self sacudirTablero: unaDireccion ].
     ^ self
 
 ]
@@ -481,6 +595,65 @@ InterfazPartida >> nuevoTexto: unTexto en: unaPosicion tamano: unTamano [
 ]
 
 { #category : 'private - updating' }
+InterfazPartida >> pintarBotonesNivel [
+    "Naranja el nivel actual, verde los desbloqueados y gris los bloqueados"
+    botonesNivel withIndexDo: [ :boton :numero |
+        boton color: (numero = nivelActual
+            ifTrue: [ self colorNaranja ]
+            ifFalse: [
+                numero <= nivelMaximo
+                    ifTrue: [ Color r: 102 g: 204 b: 153 range: 255 ]
+                    ifFalse: [ Color r: 90 g: 98 b: 120 range: 255 ] ]) ].
+    ^ self
+
+]
+
+{ #category : 'private - layout' }
+InterfazPartida >> reacomodar [
+    "Reubica todo segun el tamano actual de la ventana: paneles, botones, textos y el monitor del tablero"
+    | izquierdaDer abajo anchoPanel paso total inicio areaAncho areaAlto |
+    elementos ifNil: [ ^ self ].
+    ultimoTamano := self extent.
+    abajo := self bordeInferiorPaneles.
+    izquierdaDer := 252.
+    anchoPanel := self bordeDerechoPaneles - izquierdaDer.
+    "Panel izquierdo"
+    self colocar: #mover en: 30 @ 114.
+    self colocar: #arriba en: 105 @ 138.
+    self colocar: #izquierda en: 58 @ 180.
+    self colocar: #abajo en: 105 @ 180.
+    self colocar: #derecha en: 152 @ 180.
+    self colocar: #estado en: 30 @ 238.
+    self colocar: #longitud en: 30 @ 266.
+    self colocar: #libres en: 30 @ 288.
+    self colocar: #ayuda1 en: 30 @ 320.
+    self colocar: #ayuda2 en: 30 @ 338.
+    "Panel derecho: arriba el nivel y los botones, abajo el selector de niveles"
+    self colocar: #nivel en: (izquierdaDer + 16) @ 102.
+    self colocar: #siguiente en: (self bordeDerechoPaneles - 116) @ 100.
+    self colocar: #anterior en: (self bordeDerechoPaneles - 228) @ 100.
+    self colocar: #aviso en: (izquierdaDer + 16) @ (abajo - 116).
+    self colocar: #progreso en: (izquierdaDer + 16) @ (abajo - 90).
+    self colocar: #irA en: (izquierdaDer + 16) @ (abajo - 70).
+    paso := (((anchoPanel - 72) // 9) min: 64) max: 40.
+    total := (9 * paso) + 40.
+    inicio := izquierdaDer + ((anchoPanel - total) // 2).
+    botonesNivel withIndexDo: [ :boton :numero |
+        boton position: self position + ((inicio + ((numero - 1) * paso)) @ (abajo - 46)) ].
+    "Monitor del tablero: ocupa el espacio libre del medio, centrado"
+    vistaTablero ifNotNil: [
+        areaAncho := anchoPanel - 32.
+        areaAlto := ((abajo - 124) - 140) max: 150.
+        vistaTablero ajustarA: areaAncho @ areaAlto sprites: sprites.
+                posicionTablero := (izquierdaDer + 16 + ((areaAncho - vistaTablero width) // 2))
+            @ (140 + (((areaAlto - vistaTablero height) // 2) max: 0)).
+        vistaTablero position: self position + posicionTablero ].
+    self changed.
+    ^ self
+
+]
+
+{ #category : 'private - updating' }
 InterfazPartida >> registrarVictoria [
     | cantidad |
     partida estado = #victoria ifFalse: [ ^ self ].
@@ -499,17 +672,63 @@ InterfazPartida >> reiniciarPartida [
 
 ]
 
+{ #category : 'private - messages' }
+InterfazPartida >> revisarAviso [
+    (avisoHasta notNil and: [ Time millisecondClockValue > avisoHasta ]) ifTrue: [
+        textoAviso contents: ''.
+        avisoHasta := nil ].
+    ^ self
+
+]
+
+{ #category : 'private - shake' }
+InterfazPartida >> sacudirTablero: unaDireccion [
+    sacudidaVertical := (unaDireccion isKindOf: (Smalltalk globals at: #Arriba))
+        or: [ unaDireccion isKindOf: (Smalltalk globals at: #Abajo) ].
+    sacudidaInicio := Time millisecondClockValue.
+    ^ self
+
+]
+
 { #category : 'actions' }
 InterfazPartida >> siguienteNivel [
-    (nivelActual < (Smalltalk globals at: #Nivel) cantidad and: [ nivelActual < nivelMaximo ])
-        ifTrue: [ self iniciarNivel: nivelActual + 1 ].
+    nivelActual >= (Smalltalk globals at: #Nivel) cantidad ifTrue: [ ^ self ].
+    nivelActual < nivelMaximo
+        ifTrue: [ ^ self iniciarNivel: nivelActual + 1 ].
+    self mostrarAviso: 'Siguiente nivel bloqueado: completa primero el nivel ', nivelActual asString.
     ^ self
+
+]
+
+{ #category : 'stepping' }
+InterfazPartida >> step [
+    self extent = ultimoTamano ifFalse: [ self reacomodar ].
+    self avanzarSacudida.
+    self revisarAviso.
+    ^ self
+
+]
+
+{ #category : 'stepping' }
+InterfazPartida >> stepTime [
+    ^ 30
 
 ]
 
 { #category : 'event handling' }
 InterfazPartida >> takesKeyboardFocus [
     ^ true
+
+]
+
+{ #category : 'private - defeat' }
+InterfazPartida >> terminarDerrota [
+    "Se llama cuando termina la animacion: reinicia el mismo nivel"
+    animacion := nil.
+    partida reiniciar.
+    self actualizarVista.
+    self takeKeyboardFocus.
+    ^ self
 
 ]
 

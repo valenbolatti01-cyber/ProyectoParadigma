@@ -32,6 +32,12 @@ VictoriaMorph class >> sobre: unMorph centro: unPunto mensaje: unMensaje detalle
 ]
 
 { #category : 'private - drawing' }
+VictoriaMorph >> colorBorde [
+	^ self colorMorado
+
+]
+
+{ #category : 'private - drawing' }
 VictoriaMorph >> colorCartel [
 	^ Color r: 52 g: 59 b: 73 range: 255
 
@@ -43,16 +49,28 @@ VictoriaMorph >> colorMorado [
 
 ]
 
-{ #category : 'private - building' }
-VictoriaMorph >> crearConfeti [
-	| colores |
-	colores := {
+{ #category : 'private - drawing' }
+VictoriaMorph >> colorTitulo [
+	^ Color yellow
+
+]
+
+{ #category : 'private - drawing' }
+VictoriaMorph >> coloresConfeti [
+	^ {
 		Color r: 233 g: 154 b: 69 range: 255.
 		Color r: 139 g: 115 b: 214 range: 255.
 		Color r: 140 g: 203 b: 103 range: 255.
 		Color r: 255 g: 105 b: 150 range: 255.
 		Color yellow.
-		Color white }.
+		Color white }
+
+]
+
+{ #category : 'private - building' }
+VictoriaMorph >> crearConfeti [
+	| colores |
+	colores := self coloresConfeti.
 	particulas := OrderedCollection new.
 	70 timesRepeat: [
 		"Cada particula: x, y, velocidad x, velocidad y, color, tamano"
@@ -76,7 +94,7 @@ VictoriaMorph >> dibujarCartelEn: aCanvas [
 	caja := Rectangle center: centroCartel extent: ((300 * escala) @ (86 * escala)) rounded.
 	aCanvas fillRectangle: (caja expandBy: 4) color: Color white.
 	aCanvas fillRectangle: caja color: self colorCartel.
-	aCanvas frameRectangle: caja width: 3 color: self colorMorado.
+	aCanvas frameRectangle: caja width: 3 color: self colorBorde.
 	escala < 0.9 ifTrue: [ ^ self ].
 	fuente := LogicalFont familyName: 'Source Sans Pro' pointSize: 20.
 	fuenteChica := LogicalFont familyName: 'Source Sans Pro' pointSize: 12.
@@ -85,7 +103,7 @@ VictoriaMorph >> dibujarCartelEn: aCanvas [
 		drawString: mensaje
 		at: (centroCartel x - (anchoTexto // 2)) @ (centroCartel y - 30)
 		font: fuente
-		color: Color yellow.
+		color: self colorTitulo.
 	anchoTexto := fuenteChica widthOfString: detalle.
 	aCanvas
 		drawString: detalle

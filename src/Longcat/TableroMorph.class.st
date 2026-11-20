@@ -24,6 +24,23 @@ TableroMorph class >> partida: unaPartida sprites: unosSprites [
 
 ]
 
+{ #category : 'initialization' }
+TableroMorph >> ajustarA: unTamano sprites: unosSprites [
+    "Agranda o achica las casillas para que el monitor entre en el tamano disponible"
+    | tamano |
+    tamCelda := (((unTamano x - (2 * borde)) // partida columnas)
+        min: ((unTamano y - (2 * borde) - barra - pie) // partida filas)).
+    tamCelda := (tamCelda min: 80) max: 16.
+    tamano := tamCelda + 4.
+    #(#cabezaArriba #cabezaAbajo #cabezaDerecha #cabezaIzquierda) do: [ :clave |
+        cabezas at: clave put: ((unosSprites at: clave) scaledToSize: tamano @ tamano) ].
+    self extent: ((partida columnas * tamCelda) + (2 * borde))
+        @ ((partida filas * tamCelda) + (2 * borde) + barra + pie).
+    self changed.
+    ^ self
+
+]
+
 { #category : 'private - drawing' }
 TableroMorph >> brazoEn: aCanvas origen: unOrigen desde: unaCelda hacia: unVecino margen: unMargen grosor: unGrosor color: unColor [
 	"Pinta el tramo que va desde el centro de unaCelda hasta el borde que comparte con unVecino."
