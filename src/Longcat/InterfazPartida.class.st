@@ -51,6 +51,55 @@ InterfazPartida >> abrir [
 
 ]
 
+{ #category : 'as yet unclassified' }
+InterfazPartida >> actualizarImagenes [
+    | segmentos indice actual anterior siguiente imagen sprite |
+
+    segmentos := partida posicionesOcupadas.
+    indice := 0.
+
+    "Ocultar todas las imágenes"
+    imagenesCeldas do: [ :cadaImagen |
+        cadaImagen visible: false
+    ].
+
+    segmentos do: [ :posicion |
+        indice := indice + 1.
+
+        imagen := imagenesCeldas at: (
+            ((posicion fila - 1) * partida columnas) +
+            posicion columna
+        ).
+
+        "Dibujar la cabeza"
+        (indice = 1) ifTrue: [
+            imagen form: (
+                (sprites at: #cabezaAbajo) scaledToSize: 32 @ 32
+            ).
+            imagen visible: true
+        ].
+
+        "Dibujar el cuerpo intermedio"
+        ((indice > 1) and: [ indice < segmentos size ]) ifTrue: [
+            anterior := segmentos at: indice - 1.
+            actual := segmentos at: indice.
+            siguiente := segmentos at: indice + 1.
+
+            sprite := self
+                spritePara: anterior
+                actual: actual
+                siguiente: siguiente.
+
+            sprite ifNotNil: [
+                imagen form: (sprite scaledToSize: 32 @ 32).
+                imagen visible: true
+            ].
+        ].
+    ].
+
+    ^ self
+]
+
 { #category : 'private - updating' }
 InterfazPartida >> actualizarVista [
     vistaTablero changed.
@@ -63,6 +112,20 @@ InterfazPartida >> actualizarVista [
     self pintarBotonesNivel.
     ^ self
 
+]
+
+{ #category : 'private - configuration' }
+InterfazPartida >> aumentarColumnas [
+    columnasConfiguradas < 12 ifTrue: [ columnasConfiguradas := columnasConfiguradas + 1 ].
+    textoColumnas contents: columnasConfiguradas asString.
+    ^ self
+]
+
+{ #category : 'private - configuration' }
+InterfazPartida >> aumentarFilas [
+    filasConfiguradas < 12 ifTrue: [ filasConfiguradas := filasConfiguradas + 1 ].
+    textoFilas contents: filasConfiguradas asString.
+    ^ self
 ]
 
 { #category : 'private - shake' }
@@ -150,6 +213,13 @@ InterfazPartida >> colocar: unaClave en: unPunto [
 InterfazPartida >> colorCrema [
 	^ Color r: 245 g: 214 b: 160 range: 255
 
+]
+
+{ #category : 'private - rendering' }
+InterfazPartida >> colorDe: unaPosicion [
+    unaPosicion = partida posicionCabeza ifTrue: [ ^ Color yellow ].
+    (partida posicionesOcupadas includes: unaPosicion) ifTrue: [ ^ Color green ].
+    ^ Color white
 ]
 
 { #category : 'private - colors' }
@@ -391,6 +461,20 @@ InterfazPartida >> dibujarPanel: unRectangulo titulo: unTitulo en: aCanvas [
 
 ]
 
+{ #category : 'private - configuration' }
+InterfazPartida >> disminuirColumnas [
+    columnasConfiguradas > 2 ifTrue: [ columnasConfiguradas := columnasConfiguradas - 1 ].
+    textoColumnas contents: columnasConfiguradas asString.
+    ^ self
+]
+
+{ #category : 'private - configuration' }
+InterfazPartida >> disminuirFilas [
+    filasConfiguradas > 2 ifTrue: [ filasConfiguradas := filasConfiguradas - 1 ].
+    textoFilas contents: filasConfiguradas asString.
+    ^ self
+]
+
 { #category : 'drawing' }
 InterfazPartida >> drawOn: aCanvas [
     "Fondo gamer: degradado, grilla neon, pixeles, encabezado y paneles. Los paneles se estiran con la ventana."
@@ -481,7 +565,6 @@ InterfazPartida >> keyDown: anEvent [
 InterfazPartida >> keyStroke: anEvent [
     self inform: 'Recibí una pulsación de teclado'.
     ^ true
-
 ]
 
 { #category : 'private - rendering' }
@@ -698,6 +781,79 @@ InterfazPartida >> siguienteNivel [
     self mostrarAviso: 'Siguiente nivel bloqueado: completa primero el nivel ', nivelActual asString.
     ^ self
 
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> spriteEntre: posicionA y: posicionB [
+    (posicionA fila = posicionB fila) ifTrue: [
+        ^ sprites at: #cuerpoHorizontal
+    ].
+
+    (posicionA columna = posicionB columna) ifTrue: [
+        ^ sprites at: #cuerpoVertical
+    ].
+]
+
+{ #category : 'as yet unclassified' }
+InterfazPartida >> spritePara: anterior actual: actual siguiente: siguiente [
+
+    ((anterior fila = actual fila) and: [
+        actual fila = siguiente fila
+    ]) ifTrue: [
+        ^ sprites at: #cuerpoHorizontal
+    ].
+
+    ((anterior columna = actual columna) and: [
+        actual columna = siguiente columna
+    ]) ifTrue: [
+        ^ sprites at: #cuerpoVertical
+    ].
+
+    "Curva arriba-derecha"
+    (((anterior fila < actual fila) and: [
+        siguiente columna > actual columna
+    ]) or: [
+        (siguiente fila < actual fila) and: [
+            anterior columna > actual columna
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaArribaDerecha
+    ].
+
+    "Curva arriba-izquierda"
+    (((anterior fila < actual fila) and: [
+        siguiente columna < actual columna
+    ]) or: [
+        (siguiente fila < actual fila) and: [
+            anterior columna < actual columna
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaArribaIzquierda
+    ].
+
+    "Curva izquierda-abajo"
+    (((anterior columna < actual columna) and: [
+        siguiente fila > actual fila
+    ]) or: [
+        (siguiente columna < actual columna) and: [
+            anterior fila > actual fila
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaIzquierdaAbajo
+    ].
+
+    "Curva derecha-abajo"
+    (((anterior columna > actual columna) and: [
+        siguiente fila > actual fila
+    ]) or: [
+        (siguiente columna > actual columna) and: [
+            anterior fila > actual fila
+        ]
+    ]) ifTrue: [
+        ^ sprites at: #curvaDerechaAbajo
+    ].
+
+    ^ nil
 ]
 
 { #category : 'stepping' }
