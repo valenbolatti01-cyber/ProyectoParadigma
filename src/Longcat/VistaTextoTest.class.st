@@ -14,13 +14,13 @@ Class {
 { #category : 'running' }
 VistaTextoTest >> setUp [
     super setUp.
-    partida := (Smalltalk globals at: #Partida) deFilas: 2 columnas: 3 inicio: ((Smalltalk globals at: #Posicion) fila: 1 columna: 1)
+    partida := Partida deFilas: 2 columnas: 3 inicio: (Posicion fila: 1 columna: 1)
 ]
 
 { #category : 'tests - rendering' }
 VistaTextoTest >> testRepresentaCabezaEspaciosYEstado [
     | texto |
-    texto := (Smalltalk globals at: #VistaTexto) representar: partida.
+    texto := VistaTexto representar: partida.
     self assert: (texto includesSubstring: 'G . .').
     self assert: (texto includesSubstring: 'Estado: activa')
 ]
@@ -28,7 +28,7 @@ VistaTextoTest >> testRepresentaCabezaEspaciosYEstado [
 { #category : 'tests - rendering' }
 VistaTextoTest >> testRepresentaElCuerpoLuegoDeAvanzar [
     | texto |
-    partida moverEn: ((Smalltalk globals at: #Derecha) new).
-    texto := (Smalltalk globals at: #VistaTexto) representar: partida.
+    partida moverEn: Derecha new.
+    texto := VistaTexto representar: partida.
     self assert: (texto includesSubstring: 'o o G')
 ]

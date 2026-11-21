@@ -1,5 +1,5 @@
 "
-Representa una coordenada de fila y columna. Es un objeto de valor inmutable; puede representar una coordenada exterior al tablero para comprobar un límite.
+Representa una coordenada de fila y columna. Es un objeto de valor inmutable; puede representar una coordenada exterior al tablero para comprobar un limite.
 "
 Class {
 	#name : 'Posicion',
@@ -19,7 +19,7 @@ Posicion class >> fila: unaFila columna: unaColumna [
 
 { #category : 'arithmetic' }
 Posicion >> + otraPosicion [
-    (otraPosicion isKindOf: (Smalltalk globals at: #Posicion))
+    otraPosicion esPosicion
         ifFalse: [ self error: 'Solo se pueden sumar posiciones' ].
     ^ self class
         fila: fila + otraPosicion fila
@@ -28,13 +28,18 @@ Posicion >> + otraPosicion [
 
 { #category : 'comparing' }
 Posicion >> = otraPosicion [
-    ^ otraPosicion class = self class
+    ^ otraPosicion esPosicion
         and: [ fila = otraPosicion fila and: [ columna = otraPosicion columna ] ]
 ]
 
 { #category : 'accessing' }
 Posicion >> columna [
     ^ columna
+]
+
+{ #category : 'testing' }
+Posicion >> esPosicion [
+    ^ true
 ]
 
 { #category : 'accessing' }

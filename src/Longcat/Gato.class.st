@@ -23,7 +23,7 @@ Gato >> avanzarA: unaPosicion enDireccion: unaDireccion [
         ifFalse: [ self error: 'El nuevo segmento debe ser adyacente en esa direccion' ].
     (segmentos includes: unaPosicion)
         ifTrue: [ self error: 'El gato no puede ocupar dos veces una posicion' ].
-      segmentos addFirst: unaPosicion.
+    segmentos addFirst: unaPosicion.
     direccionUltima := unaDireccion.
     ^ self
 ]
@@ -40,7 +40,7 @@ Gato >> direccionUltima [
 
 { #category : 'initialization' }
 Gato >> inicializarEn: unaPosicion [
-    (unaPosicion isKindOf: (Smalltalk globals at: #Posicion))
+    unaPosicion esPosicion
         ifFalse: [ self error: 'El gato necesita una posicion inicial' ].
     segmentos := OrderedCollection with: unaPosicion.
     direccionUltima := nil.
@@ -59,7 +59,7 @@ Gato >> posicionesOcupadas [
 
 { #category : 'changing state' }
 Gato >> reiniciarEn: unaPosicion [
-    (unaPosicion isKindOf: (Smalltalk globals at: #Posicion))
+    unaPosicion esPosicion
         ifFalse: [ self error: 'El gato necesita una posicion inicial' ].
     segmentos := OrderedCollection with: unaPosicion.
     direccionUltima := nil.

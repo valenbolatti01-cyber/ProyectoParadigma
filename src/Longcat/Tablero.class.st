@@ -1,5 +1,5 @@
 "
-Compone una matriz privada de Casilla y responde consultas de límites, estados y disponibilidad. El borde se modela como una coordenada exterior bloqueada.
+Compone una matriz privada de Casilla y responde consultas de limites, estados y disponibilidad. El borde se modela como una coordenada exterior bloqueada.
 "
 Class {
 	#name : 'Tablero',
@@ -34,10 +34,8 @@ Tablero >> cantidadDisponibles [
     cantidad := 0.
     1 to: filas do: [ :fila |
         1 to: columnas do: [ :columna |
-            (self estaDisponible: ((Smalltalk globals at: #Posicion) fila: fila columna: columna))
-                ifTrue: [ cantidad := cantidad + 1 ]
-        ]
-    ].
+            (self estaDisponible: (Posicion fila: fila columna: columna))
+                ifTrue: [ cantidad := cantidad + 1 ] ] ].
     ^ cantidad
 ]
 
@@ -47,10 +45,8 @@ Tablero >> cantidadOcupadas [
     cantidad := 0.
     1 to: filas do: [ :fila |
         1 to: columnas do: [ :columna |
-            (self estaOcupada: ((Smalltalk globals at: #Posicion) fila: fila columna: columna))
-                ifTrue: [ cantidad := cantidad + 1 ]
-        ]
-    ].
+            (self estaOcupada: (Posicion fila: fila columna: columna))
+                ifTrue: [ cantidad := cantidad + 1 ] ] ].
     ^ cantidad
 ]
 
@@ -68,8 +64,9 @@ Tablero >> columnas [
 
 { #category : 'testing' }
 Tablero >> contiene: unaPosicion [
-    ^ (unaPosicion fila between: 1 and: filas)
-        and: [ unaPosicion columna between: 1 and: columnas ]
+    ^ unaPosicion esPosicion
+        and: [ (unaPosicion fila between: 1 and: filas)
+            and: [ unaPosicion columna between: 1 and: columnas ] ]
 ]
 
 { #category : 'testing' }
@@ -109,7 +106,7 @@ Tablero >> inicializarFilas: unaCantidadDeFilas columnas: unaCantidadDeColumnas 
     filas := unaCantidadDeFilas.
     columnas := unaCantidadDeColumnas.
     casillas := ((1 to: filas) collect: [ :fila |
-        ((1 to: columnas) collect: [ :columna | (Smalltalk globals at: #Casilla) libre ]) asArray
+        ((1 to: columnas) collect: [ :columna | Casilla libre ]) asArray
     ]) asArray.
     ^ self
 ]
@@ -125,7 +122,6 @@ Tablero >> ocupar: unaPosicion [
 { #category : 'changing state' }
 Tablero >> reiniciar [
     casillas do: [ :filaDeCasillas |
-        filaDeCasillas do: [ :casilla | casilla reiniciar ]
-    ].
+        filaDeCasillas do: [ :casilla | casilla reiniciar ] ].
     ^ self
 ]

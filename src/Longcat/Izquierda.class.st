@@ -10,5 +10,15 @@ Class {
 
 { #category : 'movement' }
 Izquierda >> desplazamiento [
-    ^ (Smalltalk globals at: #Posicion) fila: 0 columna: -1
+    ^ Posicion fila: 0 columna: -1
+]
+
+{ #category : 'testing' }
+Izquierda >> esVertical [
+    ^ false
+]
+
+{ #category : 'skins' }
+Izquierda >> spriteDeSkin: unaSkin [
+    ^ unaSkin cabezaIzquierda
 ]

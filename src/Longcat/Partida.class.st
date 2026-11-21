@@ -1,5 +1,5 @@
 "
-Coordina tablero y gato, acepta movimientos mientras está activa, actualiza el estado terminal y reinicia el mismo nivel. No imprime ni recibe entradas de interfaz.
+Coordina tablero y gato, acepta movimientos mientras esta activa, actualiza el estado terminal y reinicia el mismo nivel. No imprime ni recibe entradas de interfaz.
 "
 Class {
 	#name : 'Partida',
@@ -19,7 +19,7 @@ Partida class >> deFilas: unaCantidadDeFilas columnas: unaCantidadDeColumnas [
     ^ self
         deFilas: unaCantidadDeFilas
         columnas: unaCantidadDeColumnas
-        inicio: ((Smalltalk globals at: #Posicion) fila: 1 columna: 1)
+        inicio: (Posicion fila: 1 columna: 1)
 ]
 
 { #category : 'instance creation' }
@@ -43,7 +43,7 @@ Partida class >> deNivel: unNivel [
 
 { #category : 'private - state' }
 Partida >> actualizarEstado [
-    (tablero cantidadDisponibles = 0)
+    tablero cantidadDisponibles = 0
         ifTrue: [ estado := #victoria. ^ self ].
     self tieneMovimientosPosibles
         ifFalse: [ estado := #derrota ].
@@ -69,7 +69,27 @@ Partida >> casillaBloqueadaEn: unaPosicion [
 
 { #category : 'accessing' }
 Partida >> columnas [
-	^ tablero columnas
+    ^ tablero columnas
+]
+
+{ #category : 'accessing' }
+Partida >> direccionCabeza [
+    ^ gato direccionUltima ifNil: [ Abajo new ]
+]
+
+{ #category : 'testing' }
+Partida >> estaActiva [
+    ^ estado = #activa
+]
+
+{ #category : 'testing' }
+Partida >> estaGanada [
+    ^ estado = #victoria
+]
+
+{ #category : 'testing' }
+Partida >> estaPerdida [
+    ^ estado = #derrota
 ]
 
 { #category : 'accessing' }
@@ -79,18 +99,18 @@ Partida >> estado [
 
 { #category : 'accessing' }
 Partida >> filas [
-	^ tablero filas
+    ^ tablero filas
 ]
 
 { #category : 'initialization' }
 Partida >> inicializarFilas: unaCantidadDeFilas columnas: unaCantidadDeColumnas inicio: unaPosicion [
-    tablero := (Smalltalk globals at: #Tablero) filas: unaCantidadDeFilas columnas: unaCantidadDeColumnas.
-    (unaPosicion isKindOf: (Smalltalk globals at: #Posicion))
-        ifFalse: [ self error: 'La posicion inicial debe ser una (Smalltalk globals at: #Posicion)' ].
+    tablero := Tablero filas: unaCantidadDeFilas columnas: unaCantidadDeColumnas.
+    unaPosicion esPosicion
+        ifFalse: [ self error: 'La posicion inicial debe ser una Posicion' ].
     (tablero contiene: unaPosicion)
         ifFalse: [ self error: 'La posicion inicial esta fuera del tablero' ].
-    posicionInicial := (Smalltalk globals at: #Posicion) fila: unaPosicion fila columna: unaPosicion columna.
-    gato := (Smalltalk globals at: #Gato) en: posicionInicial.
+    posicionInicial := Posicion fila: unaPosicion fila columna: unaPosicion columna.
+    gato := Gato en: posicionInicial.
     tablero ocupar: posicionInicial.
     estado := #activa.
     self actualizarEstado.
@@ -105,15 +125,14 @@ Partida >> longitudGato [
 { #category : 'movement' }
 Partida >> moverEn: unaDireccion [
     | siguiente |
-    estado = #activa ifFalse: [ ^ self ].
-    (unaDireccion isKindOf: (Smalltalk globals at: #Direccion))
+    self estaActiva ifFalse: [ ^ self ].
+    unaDireccion esDireccion
         ifFalse: [ self error: 'Se necesita una direccion de movimiento' ].
     siguiente := unaDireccion posicionSiguienteA: gato cabeza.
     [ tablero estaDisponible: siguiente ] whileTrue: [
         tablero ocupar: siguiente.
         gato avanzarA: siguiente enDireccion: unaDireccion.
-        siguiente := unaDireccion posicionSiguienteA: gato cabeza
-    ].
+        siguiente := unaDireccion posicionSiguienteA: gato cabeza ].
     self actualizarEstado.
     ^ self
 ]
@@ -130,7 +149,7 @@ Partida >> posicionesOcupadas [
 
 { #category : 'testing' }
 Partida >> puedeMoverseEn: unaDireccion [
-    (unaDireccion isKindOf: (Smalltalk globals at: #Direccion)) ifFalse: [ ^ false ].
+    unaDireccion esDireccion ifFalse: [ ^ false ].
     ^ tablero estaDisponible: (unaDireccion posicionSiguienteA: gato cabeza)
 ]
 
@@ -146,7 +165,6 @@ Partida >> reiniciar [
 
 { #category : 'testing' }
 Partida >> tieneMovimientosPosibles [
-    ^ (Smalltalk globals at: #Direccion) todas anySatisfy: [ :direccion |
-        self puedeMoverseEn: direccion
-    ]
+    ^ Direccion todas anySatisfy: [ :direccion |
+        self puedeMoverseEn: direccion ]
 ]

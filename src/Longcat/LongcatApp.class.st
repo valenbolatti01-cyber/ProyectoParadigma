@@ -1,14 +1,18 @@
 "
-Ventana principal del juego. Carga las imagenes una sola vez y cambia de pantalla: menu principal, niveles normales (InterfazPartida), niveles personalizados y skins. Guarda la partida de niveles normales para que el progreso no se pierda al volver al menu. Se abre con: LongcatApp abrir.
+Ventana principal del juego. Carga los PNG una sola vez, gestiona la skin activa y los objetos ProgresoJuego por coleccion, y coordina la navegacion entre pantallas. Se abre con: LongcatApp abrir.
 "
 Class {
 	#name : 'LongcatApp',
 	#superclass : 'Morph',
 	#instVars : [
 		'pantalla',
-		'juego',
+		'progresos',
+		'partidasAbiertas',
 		'imagenes',
-		'skin'
+		'skinActual'
+	],
+	#classInstVars : [
+		'carpetaImagenes'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -16,18 +20,11 @@ Class {
 
 { #category : 'instance creation' }
 LongcatApp class >> abrir [
-	"LongcatApp abrir: abre el juego desde el menu principal"
 	^ self new abrir
-
 ]
 
 { #category : 'images' }
 LongcatApp class >> carpetaDeImagenes [
-	"Devuelve la carpeta donde estan los PNG del juego. Busca una que tenga los PNG del gato
-	 Y los del menu (no alcanza con encontrar solo 'Gato abajo.png', porque puede haber otra
-	 copia incompleta en otro lado). Prueba en orden: LongcatCarpeta, la carpeta de la imagen
-	 de Pharo, la carpeta de trabajo, Escritorio, Documentos y Descargas. Si ninguna esta
-	 completa, le pide al usuario que elija la carpeta assets y se acuerda de la eleccion."
 	| candidatas contiene encontrada elegida soloGato |
 	contiene := [ :carpeta :nombresPedidos |
 		[ | nombres |
@@ -37,7 +34,7 @@ LongcatApp class >> carpetaDeImagenes [
 			nombresPedidos allSatisfy: [ :nombre | nombres includes: nombre ] ] ]
 			on: Error do: [ :e | false ] ].
 	candidatas := OrderedCollection new.
-	Smalltalk globals at: #LongcatCarpeta ifPresent: [ :ruta | candidatas add: ruta asFileReference ].
+	carpetaImagenes ifNotNil: [ :ruta | candidatas add: ruta asFileReference ].
 	candidatas add: FileLocator imageDirectory resolve.
 	candidatas add: FileLocator workingDirectory resolve.
 	[ candidatas
@@ -51,27 +48,31 @@ LongcatApp class >> carpetaDeImagenes [
 	elegida := [ UIManager default chooseDirectory: 'Elegi la carpeta assets (la que tiene Gato abajo.png y logo_longcat.png)' ]
 		on: Error do: [ :e | nil ].
 	elegida ifNotNil: [
-		Smalltalk globals at: #LongcatCarpeta put: elegida asFileReference.
-		^ elegida asFileReference ].
+		carpetaImagenes := elegida asFileReference.
+		^ carpetaImagenes ].
 	soloGato := candidatas detect: [ :carpeta |
 		contiene value: carpeta value: #('gato abajo.png') ] ifNone: [ nil ].
 	^ soloGato ifNil: [ FileLocator imageDirectory resolve ]
+]
 
+{ #category : 'images' }
+LongcatApp class >> carpetaDeImagenes: unaRuta [
+	carpetaImagenes := unaRuta ifNotNil: [ unaRuta asFileReference ].
+	^ carpetaImagenes
 ]
 
 { #category : 'opening' }
 LongcatApp >> abrir [
 	self cargarImagenes.
+	skinActual := SkinGato originalConImagenes: imagenes.
 	self openInWindowLabeled: 'Longcat.exe'.
 	self irAlMenu.
 	self startStepping.
 	^ self
-
 ]
 
 { #category : 'images' }
 LongcatApp >> archivosDeImagenes [
-	"Clave -> nombre del PNG en la carpeta sprites"
 	^ {
 		#cabezaAbajo -> 'Gato abajo.png'.
 		#cabezaArriba -> 'Gato arriba.png'.
@@ -93,15 +94,12 @@ LongcatApp >> archivosDeImagenes [
 		#minecraft -> 'Minecraft.png'.
 		#pokemon -> 'Pokemon.png'.
 		#dragonBall -> 'Dragon_Ball.png' }
-
 ]
 
 { #category : 'images' }
 LongcatApp >> cargarImagenes [
-	"Busca los PNG una sola vez dentro de LongcatCarpeta (o de la carpeta de la imagen de Pharo).
-	 Si falta una imagen del menu se dibuja un reemplazo; las del gato son obligatorias."
 	| raiz nombres faltantes clave |
-	raiz := (Smalltalk globals at: #LongcatApp) carpetaDeImagenes.
+	raiz := self class carpetaDeImagenes.
 	nombres := Dictionary new.
 	self archivosDeImagenes do: [ :par | nombres at: par value asLowercase put: par key ].
 	imagenes := Dictionary new.
@@ -115,58 +113,62 @@ LongcatApp >> cargarImagenes [
 	faltantes isEmpty ifFalse: [
 		^ self error: 'No encuentro las imagenes del gato (Gato abajo.png, Gato arriba.png...) dentro de: ', raiz fullName ].
 	^ imagenes
-
 ]
 
 { #category : 'skins' }
 LongcatApp >> elegirSkin: unaSkin [
-	skin := unaSkin.
-	juego ifNotNil: [ :partidaAbierta | partidaAbierta usarSprites: self spritesDelGato ].
+	skinActual := unaSkin.
+	progresos valuesDo: [ :unProgreso | unProgreso equiparSkin: unaSkin ].
+	partidasAbiertas valuesDo: [ :interfaz | interfaz actualizarSkin ].
 	pantalla ifNotNil: [ :actual | actual refrescar ].
 	^ self
-
 ]
 
 { #category : 'images' }
 LongcatApp >> imagen: unaClave [
 	^ imagenes at: unaClave ifAbsent: [ nil ]
-
 ]
 
 { #category : 'initialization' }
 LongcatApp >> initialize [
 	super initialize.
-	skin := #original.
 	imagenes := Dictionary new.
+	progresos := Dictionary new.
+	partidasAbiertas := Dictionary new.
+	skinActual := SkinGato original.
 	self extent: 1040 @ 660.
 	self color: EstiloLongcat colorFondoArriba.
 	^ self
-
 ]
 
 { #category : 'navigation' }
 LongcatApp >> irAlMenu [
 	^ self mostrar: (MenuPrincipalMorph app: self)
+]
 
+{ #category : 'navigation' }
+LongcatApp >> jugarColeccion: unaColeccion [
+	| interfaz progreso |
+	unaColeccion estaDisponible ifFalse: [ ^ self ].
+	progreso := self progresoPara: unaColeccion.
+	interfaz := partidasAbiertas
+		at: unaColeccion class
+		ifAbsentPut: [ InterfazPartida app: self progreso: progreso ].
+	^ self mostrar: interfaz
 ]
 
 { #category : 'navigation' }
 LongcatApp >> jugarNiveles [
-	"Los 10 niveles de siempre. La partida se guarda: al volver del menu sigue donde estaba."
-	juego ifNil: [ juego := (Smalltalk globals at: #InterfazPartida) app: self ].
-	^ self mostrar: juego
-
+	^ self jugarColeccion: ColeccionNiveles normales
 ]
 
 { #category : 'navigation' }
 LongcatApp >> jugarPersonalizados [
 	^ self mostrar: (MenuPersonalizadosMorph app: self)
-
 ]
 
 { #category : 'navigation' }
 LongcatApp >> mostrar: unaPantalla [
-	"Saca la pantalla actual y pone otra ocupando toda la ventana"
 	pantalla ifNotNil: [ :actual | actual == unaPantalla ifFalse: [ actual delete ] ].
 	pantalla := unaPantalla.
 	unaPantalla owner == self ifFalse: [ self addMorph: unaPantalla ].
@@ -175,24 +177,38 @@ LongcatApp >> mostrar: unaPantalla [
 	unaPantalla startStepping.
 	unaPantalla takeKeyboardFocus.
 	^ unaPantalla
+]
 
+{ #category : 'progression' }
+LongcatApp >> progresoPara: unaColeccion [
+	^ progresos
+		at: unaColeccion class
+		ifAbsentPut: [ ProgresoJuego conColeccion: unaColeccion skin: skinActual ]
 ]
 
 { #category : 'navigation' }
 LongcatApp >> salir [
-	"Cierra la ventana del juego (Pharo sigue abierto)"
 	| ventana |
 	self stopStepping.
-	ventana := self ownerThatIsA: (Smalltalk globals at: #SystemWindow).
+	ventana := self ownerThatIsA: SystemWindow.
 	ventana ifNil: [ ^ self delete ].
 	^ ventana delete
-
 ]
 
 { #category : 'skins' }
 LongcatApp >> skin [
 	^ skin
 
+]
+
+{ #category : 'skins' }
+LongcatApp >> skinActual [
+	^ skinActual
+]
+
+{ #category : 'skins' }
+LongcatApp >> skinsDisponibles [
+	^ { SkinGato originalConImagenes: imagenes }
 ]
 
 { #category : 'skins' }
@@ -209,20 +225,16 @@ LongcatApp >> spritesDelGato [
 
 { #category : 'stepping' }
 LongcatApp >> step [
-	"La ventana agranda o achica la app; la pantalla actual la sigue"
 	pantalla ifNil: [ ^ self ].
 	pantalla bounds = self bounds ifFalse: [ pantalla bounds: self bounds ]
-
 ]
 
 { #category : 'stepping' }
 LongcatApp >> stepTime [
 	^ 50
-
 ]
 
 { #category : 'navigation' }
 LongcatApp >> verSkins [
 	^ self mostrar: (MenuSkinsMorph app: self)
-
 ]

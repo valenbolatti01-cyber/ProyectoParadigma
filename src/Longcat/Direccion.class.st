@@ -1,5 +1,5 @@
 "
-Abstracción de una dirección ortogonal. Define cómo calcular la posición siguiente; las subclases proveen desplazamientos distintos.
+Abstraccion de una direccion ortogonal. Define como calcular la posicion siguiente y delega en subclases desplazamiento, orientacion y sprite de cabeza.
 "
 Class {
 	#name : 'Direccion',
@@ -9,8 +9,21 @@ Class {
 }
 
 { #category : 'instance creation' }
+Direccion class >> desdeSimbolo: unSimbolo [
+    | mapa clase |
+    mapa := {
+        #arriba -> Arriba.
+        #abajo -> Abajo.
+        #izquierda -> Izquierda.
+        #derecha -> Derecha } asDictionary.
+    clase := mapa at: unSimbolo ifAbsent: [
+        self error: 'Direccion desconocida: ', unSimbolo asString ].
+    ^ clase new
+]
+
+{ #category : 'instance creation' }
 Direccion class >> todas [
-    ^ { (Smalltalk globals at: #Arriba) new. (Smalltalk globals at: #Abajo) new. (Smalltalk globals at: #Derecha) new. (Smalltalk globals at: #Izquierda) new }
+    ^ { Arriba new. Abajo new. Derecha new. Izquierda new }
 ]
 
 { #category : 'movement' }
@@ -18,7 +31,22 @@ Direccion >> desplazamiento [
     self subclassResponsibility
 ]
 
+{ #category : 'testing' }
+Direccion >> esDireccion [
+    ^ true
+]
+
+{ #category : 'testing' }
+Direccion >> esVertical [
+    self subclassResponsibility
+]
+
 { #category : 'movement' }
 Direccion >> posicionSiguienteA: unaPosicion [
     ^ unaPosicion + self desplazamiento
+]
+
+{ #category : 'skins' }
+Direccion >> spriteDeSkin: unaSkin [
+    self subclassResponsibility
 ]

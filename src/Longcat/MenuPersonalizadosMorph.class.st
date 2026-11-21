@@ -1,5 +1,5 @@
 "
-Menu de niveles personalizados: Minecraft, Pokemon y Dragon Ball. Por ahora las tarjetas no tienen accion (se desarrollan despues).
+Menu de niveles personalizados generado polimorficamente a partir de las subclases de ColeccionNiveles (Minecraft, Pokemon, Dragon Ball).
 "
 Class {
 	#name : 'MenuPersonalizadosMorph',
@@ -12,17 +12,34 @@ Class {
 	#package : 'Longcat'
 }
 
+{ #category : 'private - building' }
+MenuPersonalizadosMorph >> claveIconoParaColeccion: unaColeccion [
+	^ {
+		NivelesMinecraft -> #minecraft.
+		NivelesPokemon -> #pokemon.
+		NivelesDragonBall -> #dragonBall } asDictionary
+		at: unaColeccion class
+		ifAbsent: [ nil ]
+]
+
+{ #category : 'private - building' }
+MenuPersonalizadosMorph >> colorParaColeccion: unaColeccion [
+	^ {
+		NivelesMinecraft -> EstiloLongcat colorVerde.
+		NivelesPokemon -> EstiloLongcat colorRosa.
+		NivelesDragonBall -> EstiloLongcat colorNaranja } asDictionary
+		at: unaColeccion class
+		ifAbsent: [ EstiloLongcat colorMorado ]
+]
+
 { #category : 'building' }
 MenuPersonalizadosMorph >> construir [
 	volver := self botonVolver.
-	tarjetas := {
-		self tarjeta: #minecraft titulo: 'Minecraft' color: EstiloLongcat colorVerde.
-		self tarjeta: #pokemon titulo: 'Pokémon' color: EstiloLongcat colorRosa.
-		self tarjeta: #dragonBall titulo: 'Dragon Ball' color: EstiloLongcat colorNaranja }.
+	tarjetas := ColeccionNiveles personalizadas collect: [ :coleccion |
+		self tarjetaParaColeccion: coleccion ].
 	self addMorph: volver.
 	tarjetas do: [ :tarjeta | self addMorph: tarjeta ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
@@ -35,7 +52,6 @@ MenuPersonalizadosMorph >> drawOn: aCanvas [
 		tamano: ((6 * self escala) rounded max: 2)
 		sobre: aCanvas.
 	self dibujarPie: 'Próximamente: niveles temáticos para cada mundo' sobre: aCanvas
-
 ]
 
 { #category : 'building' }
@@ -48,6 +64,20 @@ MenuPersonalizadosMorph >> tarjeta: unaClave titulo: unTitulo color: unColor [
 
 ]
 
+{ #category : 'building' }
+MenuPersonalizadosMorph >> tarjetaParaColeccion: unaColeccion [
+	| accion argumentos tarjeta |
+	accion := unaColeccion estaDisponible ifTrue: [ #jugarColeccion: ] ifFalse: [ nil ].
+	argumentos := unaColeccion estaDisponible ifTrue: [ Array with: unaColeccion ] ifFalse: [ #() ].
+	tarjeta := (TarjetaMorph imagen: (self imagen: (self claveIconoParaColeccion: unaColeccion)) accion: accion de: app)
+		titulo: unaColeccion nombre;
+		colorBorde: (self colorParaColeccion: unaColeccion);
+		argumentos: argumentos;
+		yourself.
+	unaColeccion estaDisponible ifTrue: [ tarjeta insignia: 'JUGAR' ].
+	^ tarjeta
+]
+
 { #category : 'layout' }
 MenuPersonalizadosMorph >> ubicarElementos [
 	volver ifNil: [ ^ self ].
@@ -55,5 +85,4 @@ MenuPersonalizadosMorph >> ubicarElementos [
 	tarjetas withIndexDo: [ :tarjeta :indice |
 		tarjeta bounds: (self virtual: ((110 + ((indice - 1) * 387)) @ 300 extent: 345 @ 330)) ].
 	^ self
-
 ]

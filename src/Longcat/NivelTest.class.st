@@ -18,7 +18,7 @@ NivelTest >> direccionPara: unSimbolo [
 
 { #category : 'support' }
 NivelTest >> niveles [
-    ^ (Smalltalk globals at: #Nivel) todos
+    ^ Nivel todos
 ]
 
 { #category : 'tests' }
@@ -32,10 +32,10 @@ NivelTest >> testCadaMapaEsRectangularYTieneUnSoloInicio [
 { #category : 'tests' }
 NivelTest >> testCadaNivelSePuedeGanarConSuSolucion [
     self niveles do: [ :nivel | | partida |
-        partida := (Smalltalk globals at: #Partida) deNivel: nivel.
+        partida := Partida deNivel: nivel.
         nivel solucion do: [ :simbolo |
-            partida moverEn: (self direccionPara: simbolo) ].
-        self assert: partida estado = #victoria description: 'Nivel ', nivel numero asString ]
+            partida moverEn: (Direccion desdeSimbolo: simbolo) ].
+        self assert: partida estaGanada description: 'Nivel ', nivel numero asString ]
 ]
 
 { #category : 'tests' }

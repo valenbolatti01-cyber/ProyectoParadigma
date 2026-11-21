@@ -13,25 +13,20 @@ Class {
 
 { #category : 'layout' }
 MenuPrincipalMorph >> alineacionVertical [
-	"La escena queda pegada arriba (la planta cuelga del techo); abajo sigue el piso"
 	^ 0
-
 ]
 
 { #category : 'building' }
 MenuPrincipalMorph >> boton: unaClave texto: unTexto accion: unSelector color: unColor [
-	"Boton con la imagen del menu; el texto solo se ve si falta el PNG"
 	^ (BotonImagenMorph imagen: (self imagen: unaClave) accion: unSelector de: app)
 		etiqueta: unTexto;
 		colorBorde: unColor;
 		yourself
-
 ]
 
 { #category : 'drawing' }
 MenuPrincipalMorph >> conEsquinas [
 	^ false
-
 ]
 
 { #category : 'building' }
@@ -43,12 +38,10 @@ MenuPrincipalMorph >> construir [
 		self boton: #botonSalir texto: 'Salir' accion: #salir color: EstiloLongcat colorRosa }.
 	botones do: [ :boton | self addMorph: boton ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
 MenuPrincipalMorph >> decoraciones [
-	"Imagen -> lugar en la escena de 1340 x 740. Se dibujan en este orden: lo de atras primero."
 	^ {
 		#ventana -> (1170 @ 175 extent: 160 @ 200).
 		#estante -> (985 @ 8 extent: 190 @ 138).
@@ -58,7 +51,6 @@ MenuPrincipalMorph >> decoraciones [
 		#escritorio -> (0 @ 640 extent: 700 @ 186).
 		#protagonista -> (130 @ 300 extent: 520 @ 361).
 		#taza -> (95 @ 546 extent: 85 @ 107) }
-
 ]
 
 { #category : 'drawing' }
@@ -75,7 +67,6 @@ MenuPrincipalMorph >> dibujarPisoEn: aCanvas [
 			color: (EstiloLongcat colorMorado alpha: 0.15).
 		x := x + paso ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
@@ -90,7 +81,6 @@ MenuPrincipalMorph >> drawOn: aCanvas [
 			chispasEn: (self virtual: (1124 @ 150 extent: 0 @ 0)) origin
 			tamano: ((6 * self escala) rounded max: 2)
 			sobre: canvas ]
-
 ]
 
 { #category : 'layout' }
@@ -100,7 +90,6 @@ MenuPrincipalMorph >> lugaresDeBotones [
 		680 @ 319 extent: 470 @ 116.
 		680 @ 451 extent: 470 @ 113.
 		680 @ 580 extent: 470 @ 100 }
-
 ]
 
 { #category : 'layout' }
@@ -108,5 +97,4 @@ MenuPrincipalMorph >> ubicarElementos [
 	botones ifNil: [ ^ self ].
 	botones with: self lugaresDeBotones do: [ :boton :lugar | boton bounds: (self virtual: lugar) ].
 	^ self
-
 ]

@@ -14,7 +14,7 @@ Class {
 { #category : 'running' }
 CasillaTest >> setUp [
     super setUp.
-    casilla := (Smalltalk globals at: #Casilla) libre
+    casilla := Casilla libre
 ]
 
 { #category : 'tests - state' }

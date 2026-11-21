@@ -1,5 +1,5 @@
 "
-Superclase de todas las pantallas del juego. Dibuja el fondo violeta comun (degradado, cuadraditos y esquinas de neon) y ubica todo sobre una escena virtual de 1340 x 740 que se escala con la ventana. Cada subclase arma sus botones en construir y los ubica en ubicarElementos.
+Superclase de todas las pantallas del juego. Dibuja el fondo violeta comun y ubica elementos sobre una escena virtual de 1340 x 740 escalable.
 "
 Class {
 	#name : 'PantallaLongcat',
@@ -18,80 +18,64 @@ Class {
 { #category : 'instance creation' }
 PantallaLongcat class >> app: unaApp [
 	^ self new setApp: unaApp
-
 ]
 
 { #category : 'showing' }
 PantallaLongcat >> alMostrarse [
-	"LongcatApp lo llama cada vez que la pantalla aparece: la primera vez arma los botones"
 	construida == true ifFalse: [
 		self construir.
 		construida := true ].
 	self reacomodar.
 	^ self
-
 ]
 
 { #category : 'layout' }
 PantallaLongcat >> alineacionVertical [
-	"0 = escena pegada arriba, 0.5 = centrada"
 	^ 0.5
-
 ]
 
 { #category : 'accessing' }
 PantallaLongcat >> app [
 	^ app
-
 ]
 
 { #category : 'building' }
 PantallaLongcat >> botonVolver [
-	"Boton con flecha que vuelve al menu principal"
 	^ (BotonImagenMorph imagen: nil accion: #irAlMenu de: app)
 		etiqueta: #flecha;
 		yourself
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> conEsquinas [
 	^ true
-
 ]
 
 { #category : 'showing' }
 PantallaLongcat >> construir [
-	"Las subclases agregan sus botones"
 	^ self
-
 ]
 
 { #category : 'initialization' }
 PantallaLongcat >> crearPixeles [
-	"Cuadraditos fijos del fondo (misma semilla, siempre iguales): posicion proporcional, lado y transparencia"
 	| azar |
 	azar := Random seed: 11.
 	pixeles := (1 to: 46) collect: [ :indice |
 		{ (azar next @ azar next). (8 + (azar next * 18)) rounded. 0.04 + (azar next * 0.08) } ].
 	^ self
-
 ]
 
 { #category : 'images' }
 PantallaLongcat >> dibujar: unaClave en: unRectangulo sobre: aCanvas [
-	"Dibuja la imagen centrada dentro del rectangulo (si existe)"
 	| imagen |
 	imagen := self forma: unaClave ajustadaA: unRectangulo extent.
 	imagen ifNil: [ ^ self ].
 	aCanvas translucentImage: imagen at: unRectangulo center - (imagen extent // 2).
 	^ self
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> dibujarEsquinasEn: aCanvas [
-	"Corchetes de neon en las cuatro esquinas"
 	| largo grosor margen caja |
 	largo := (52 * self escala) rounded max: 16.
 	grosor := (5 * self escala) rounded max: 2.
@@ -108,12 +92,10 @@ PantallaLongcat >> dibujarEsquinasEn: aCanvas [
 				extra: capa value
 				sobre: aCanvas ] ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> dibujarFondoEn: aCanvas [
-	"Fondo comun de todo el juego: degradado violeta, cuadraditos y esquinas de neon"
 	| bandas alto arriba abajo |
 	arriba := EstiloLongcat colorFondoArriba.
 	abajo := EstiloLongcat colorFondoAbajo.
@@ -130,12 +112,10 @@ PantallaLongcat >> dibujarFondoEn: aCanvas [
 			aCanvas fillRectangle: (esquina extent: lado @ lado) color: (EstiloLongcat colorLavanda alpha: (pixel at: 3)) ] ].
 	self conEsquinas ifTrue: [ self dibujarEsquinasEn: aCanvas ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> dibujarIcono: unIcono en: unRectangulo sobre: aCanvas [
-	"#grilla dibuja cuatro cuadraditos; cualquier otra clave se busca entre las imagenes"
 	| separacion lado grosor |
 	unIcono = #grilla ifFalse: [ ^ self dibujar: unIcono en: unRectangulo sobre: aCanvas ].
 	separacion := (unRectangulo width // 8) max: 2.
@@ -150,7 +130,6 @@ PantallaLongcat >> dibujarIcono: unIcono en: unRectangulo sobre: aCanvas [
 				grosor: grosor
 				sobre: aCanvas ] ].
 	^ self
-
 ]
 
 { #category : 'drawing' }
@@ -165,7 +144,6 @@ PantallaLongcat >> dibujarLogoEn: aCanvas [
 		color: EstiloLongcat colorCrema
 		sobre: aCanvas.
 	^ self
-
 ]
 
 { #category : 'drawing' }
@@ -177,12 +155,10 @@ PantallaLongcat >> dibujarPie: unTexto sobre: aCanvas [
 		color: (EstiloLongcat colorLavanda alpha: 0.8)
 		sobre: aCanvas.
 	^ self
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> dibujarTitulo: unTexto icono: unIcono en: unRectangulo sobre: aCanvas [
-	"Cartel del titulo de la pantalla: icono, separador y texto centrado"
 	| r grosor lado icono separador |
 	r := self virtual: unRectangulo.
 	grosor := (5 * self escala) rounded max: 2.
@@ -202,20 +178,16 @@ PantallaLongcat >> dibujarTitulo: unTexto icono: unIcono en: unRectangulo sobre:
 		color: Color white
 		sobre: aCanvas.
 	^ self
-
 ]
 
 { #category : 'drawing' }
 PantallaLongcat >> drawOn: aCanvas [
 	self dibujarFondoEn: aCanvas
-
 ]
 
 { #category : 'layout' }
 PantallaLongcat >> escala [
-	"Todas las pantallas se disenan sobre una escena de 1340 x 740 que se agranda o achica con la ventana"
 	^ ((self width / 1340) min: (self height / 740)) asFloat max: 0.2
-
 ]
 
 { #category : 'drawing' }
@@ -226,12 +198,10 @@ PantallaLongcat >> esquina: unPunto sentido: unSentido largo: unLargo grosor: un
 	aCanvas fillRectangle: (horizontal expandBy: unExtra) color: unColor.
 	aCanvas fillRectangle: (vertical expandBy: unExtra) color: unColor.
 	^ self
-
 ]
 
 { #category : 'images' }
 PantallaLongcat >> forma: unaClave ajustadaA: unTamano [
-	"La imagen escalada para entrar en unTamano, sin deformarse. Se guarda para no escalar en cada dibujo."
 	| original guardada tamano |
 	original := self imagen: unaClave.
 	original ifNil: [ ^ nil ].
@@ -242,13 +212,11 @@ PantallaLongcat >> forma: unaClave ajustadaA: unTamano [
 	guardada := tamano -> (original scaledToSize: tamano).
 	cacheFormas at: unaClave put: guardada.
 	^ guardada value
-
 ]
 
 { #category : 'images' }
 PantallaLongcat >> imagen: unaClave [
 	^ app ifNotNil: [ :unaApp | unaApp imagen: unaClave ]
-
 ]
 
 { #category : 'initialization' }
@@ -259,7 +227,6 @@ PantallaLongcat >> initialize [
 	self color: EstiloLongcat colorFondoArriba.
 	self crearPixeles.
 	^ self
-
 ]
 
 { #category : 'layout' }
@@ -267,7 +234,6 @@ PantallaLongcat >> origenVirtual [
 	| e |
 	e := self escala.
 	^ self position + ((((self width - (1340 * e)) / 2) @ ((self height - (740 * e)) * self alineacionVertical)) rounded)
-
 ]
 
 { #category : 'layout' }
@@ -276,48 +242,38 @@ PantallaLongcat >> reacomodar [
 	self ubicarElementos.
 	self changed.
 	^ self
-
 ]
 
 { #category : 'showing' }
 PantallaLongcat >> refrescar [
-	"LongcatApp avisa cuando cambia algo (por ejemplo, la skin elegida)"
 	self changed.
 	^ self
-
 ]
 
 { #category : 'initialization' }
 PantallaLongcat >> setApp: unaApp [
 	app := unaApp.
 	^ self
-
 ]
 
 { #category : 'stepping' }
 PantallaLongcat >> step [
 	self extent = tamanoAnterior ifFalse: [ self reacomodar ]
-
 ]
 
 { #category : 'stepping' }
 PantallaLongcat >> stepTime [
 	^ 50
-
 ]
 
 { #category : 'layout' }
 PantallaLongcat >> ubicarElementos [
-	"Las subclases ubican sus botones con self virtual:"
 	^ self
-
 ]
 
 { #category : 'layout' }
 PantallaLongcat >> virtual: unRectangulo [
-	"Convierte un rectangulo de la escena de 1340 x 740 a coordenadas de pantalla"
 	| e |
 	e := self escala.
 	^ ((self origenVirtual + (unRectangulo origin * e)) extent: (unRectangulo extent * e)) rounded
-
 ]

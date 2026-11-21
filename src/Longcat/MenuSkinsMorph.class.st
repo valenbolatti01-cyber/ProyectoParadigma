@@ -1,5 +1,5 @@
 "
-Eleccion del aspecto del gato. Por ahora solo existe la skin Original; las demas tarjetas quedan como Proximamente.
+Pantalla de seleccion de SkinGato. Permite equipar las skins disponibles y muestra espacios preparados para futuras skins.
 "
 Class {
 	#name : 'MenuSkinsMorph',
@@ -14,15 +14,18 @@ Class {
 
 { #category : 'building' }
 MenuSkinsMorph >> construir [
-	| original |
+	| disponibles faltantes |
 	volver := self botonVolver.
-	original := (TarjetaMorph imagen: (self imagen: #cabezaAbajo) accion: #elegirSkin: de: app)
-		titulo: 'Original';
-		colorBorde: EstiloLongcat colorNaranja;
-		argumentos: #(#original);
-		yourself.
-	tarjetas := OrderedCollection with: original.
-	3 timesRepeat: [
+	tarjetas := OrderedCollection new.
+	disponibles := app skinsDisponibles.
+	disponibles do: [ :unaSkin |
+		tarjetas add: ((TarjetaMorph imagen: unaSkin cabezaAbajo accion: #elegirSkin: de: app)
+			titulo: unaSkin nombre;
+			colorBorde: unaSkin colorBorde;
+			argumentos: (Array with: unaSkin);
+			yourself) ].
+	faltantes := (4 - disponibles size) max: 0.
+	faltantes timesRepeat: [
 		tarjetas add: ((TarjetaMorph imagen: nil accion: nil de: app)
 			titulo: 'Próximamente';
 			simbolo: '?';
@@ -32,7 +35,6 @@ MenuSkinsMorph >> construir [
 	tarjetas do: [ :tarjeta | self addMorph: tarjeta ].
 	self refrescar.
 	^ self
-
 ]
 
 { #category : 'drawing' }
@@ -47,17 +49,19 @@ MenuSkinsMorph >> drawOn: aCanvas [
 		color: EstiloLongcat colorCrema
 		sobre: aCanvas.
 	self dibujarPie: 'Pronto vas a poder elegir más aspectos del gato' sobre: aCanvas
-
 ]
 
 { #category : 'showing' }
 MenuSkinsMorph >> refrescar [
-	"Marca como EQUIPADO la skin que esta usando el gato"
-	tarjetas ifNotNil: [
-		tarjetas first insignia: (app skin = #original ifTrue: [ 'EQUIPADO' ] ifFalse: [ nil ]) ].
+	| disponibles |
+	tarjetas ifNil: [ ^ self ].
+	disponibles := app skinsDisponibles.
+	disponibles withIndexDo: [ :unaSkin :indice |
+		(tarjetas at: indice) insignia: (app skinActual = unaSkin
+			ifTrue: [ 'EQUIPADO' ]
+			ifFalse: [ nil ]) ].
 	self changed.
 	^ self
-
 ]
 
 { #category : 'layout' }
@@ -67,5 +71,4 @@ MenuSkinsMorph >> ubicarElementos [
 	tarjetas withIndexDo: [ :tarjeta :indice |
 		tarjeta bounds: (self virtual: ((110 + ((indice - 1) * 290)) @ 320 extent: 250 @ 300)) ].
 	^ self
-
 ]

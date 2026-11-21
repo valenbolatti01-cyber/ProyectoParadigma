@@ -1,5 +1,5 @@
 "
-Verifica dimensiones, límites, disponibilidad y reinicio del Tablero sin acceder a su matriz interna.
+Verifica dimensiones, limites, disponibilidad y reinicio del Tablero sin acceder a su matriz interna.
 "
 Class {
 	#name : 'TableroTest',
@@ -14,18 +14,18 @@ Class {
 { #category : 'running' }
 TableroTest >> setUp [
     super setUp.
-    tablero := (Smalltalk globals at: #Tablero) filas: 3 columnas: 4
+    tablero := Tablero filas: 3 columnas: 4
 ]
 
 { #category : 'tests - state' }
 TableroTest >> testBloqueoSeConservaAlReiniciar [
     | posicion |
-    posicion := (Smalltalk globals at: #Posicion) fila: 1 columna: 2.
+    posicion := Posicion fila: 1 columna: 2.
     tablero bloquear: posicion.
-    tablero ocupar: ((Smalltalk globals at: #Posicion) fila: 2 columna: 2).
+    tablero ocupar: (Posicion fila: 2 columna: 2).
     tablero reiniciar.
     self assert: (tablero estaBloqueada: posicion).
-    self assert: (tablero estaDisponible: ((Smalltalk globals at: #Posicion) fila: 2 columna: 2))
+    self assert: (tablero estaDisponible: (Posicion fila: 2 columna: 2))
 ]
 
 { #category : 'tests - dimensions' }
@@ -37,7 +37,7 @@ TableroTest >> testConservaDimensionesRectangulares [
 { #category : 'tests - state' }
 TableroTest >> testOcuparActualizaLasConsultasYElContador [
     | posicion |
-    posicion := (Smalltalk globals at: #Posicion) fila: 2 columna: 3.
+    posicion := Posicion fila: 2 columna: 3.
     tablero ocupar: posicion.
     self assert: (tablero estaOcupada: posicion).
     self assert: (tablero estadoDe: posicion) = #ocupada.
@@ -46,9 +46,9 @@ TableroTest >> testOcuparActualizaLasConsultasYElContador [
 
 { #category : 'tests - dimensions' }
 TableroTest >> testReconocePosicionesInterioresYExteriores [
-    self assert: (tablero contiene: ((Smalltalk globals at: #Posicion) fila: 3 columna: 4)).
-    self deny: (tablero contiene: ((Smalltalk globals at: #Posicion) fila: 0 columna: 4)).
-    self assert: (tablero estaBloqueada: ((Smalltalk globals at: #Posicion) fila: 0 columna: 4))
+    self assert: (tablero contiene: (Posicion fila: 3 columna: 4)).
+    self deny: (tablero contiene: (Posicion fila: 0 columna: 4)).
+    self assert: (tablero estaBloqueada: (Posicion fila: 0 columna: 4))
 ]
 
 { #category : 'tests - state' }
