@@ -21,6 +21,44 @@ LongcatApp class >> abrir [
 
 ]
 
+{ #category : 'images' }
+LongcatApp class >> carpetaDeImagenes [
+	"Devuelve la carpeta donde estan los PNG del juego. Busca una que tenga los PNG del gato
+	 Y los del menu (no alcanza con encontrar solo 'Gato abajo.png', porque puede haber otra
+	 copia incompleta en otro lado). Prueba en orden: LongcatCarpeta, la carpeta de la imagen
+	 de Pharo, la carpeta de trabajo, Escritorio, Documentos y Descargas. Si ninguna esta
+	 completa, le pide al usuario que elija la carpeta assets y se acuerda de la eleccion."
+	| candidatas contiene encontrada elegida soloGato |
+	contiene := [ :carpeta :nombresPedidos |
+		[ | nombres |
+		carpeta exists and: [
+			nombres := ((carpeta allChildren select: [ :archivo | archivo isFile ])
+				collect: [ :archivo | archivo basename asLowercase ]) asSet.
+			nombresPedidos allSatisfy: [ :nombre | nombres includes: nombre ] ] ]
+			on: Error do: [ :e | false ] ].
+	candidatas := OrderedCollection new.
+	Smalltalk globals at: #LongcatCarpeta ifPresent: [ :ruta | candidatas add: ruta asFileReference ].
+	candidatas add: FileLocator imageDirectory resolve.
+	candidatas add: FileLocator workingDirectory resolve.
+	[ candidatas
+		add: FileLocator desktop resolve;
+		add: FileLocator documents resolve;
+		add: (FileLocator home / 'Downloads') resolve ]
+		on: Error do: [ :e | nil ].
+	encontrada := candidatas detect: [ :carpeta |
+		contiene value: carpeta value: #('gato abajo.png' 'logo_longcat.png' 'boton_salir.png') ] ifNone: [ nil ].
+	encontrada ifNotNil: [ ^ encontrada ].
+	elegida := [ UIManager default chooseDirectory: 'Elegi la carpeta assets (la que tiene Gato abajo.png y logo_longcat.png)' ]
+		on: Error do: [ :e | nil ].
+	elegida ifNotNil: [
+		Smalltalk globals at: #LongcatCarpeta put: elegida asFileReference.
+		^ elegida asFileReference ].
+	soloGato := candidatas detect: [ :carpeta |
+		contiene value: carpeta value: #('gato abajo.png') ] ifNone: [ nil ].
+	^ soloGato ifNil: [ FileLocator imageDirectory resolve ]
+
+]
+
 { #category : 'opening' }
 LongcatApp >> abrir [
 	self cargarImagenes.
@@ -63,7 +101,7 @@ LongcatApp >> cargarImagenes [
 	"Busca los PNG una sola vez dentro de LongcatCarpeta (o de la carpeta de la imagen de Pharo).
 	 Si falta una imagen del menu se dibuja un reemplazo; las del gato son obligatorias."
 	| raiz nombres faltantes clave |
-	raiz := (Smalltalk globals at: #LongcatCarpeta ifAbsent: [ FileLocator imageDirectory ]) asFileReference.
+	raiz := (Smalltalk globals at: #LongcatApp) carpetaDeImagenes.
 	nombres := Dictionary new.
 	self archivosDeImagenes do: [ :par | nombres at: par value asLowercase put: par key ].
 	imagenes := Dictionary new.

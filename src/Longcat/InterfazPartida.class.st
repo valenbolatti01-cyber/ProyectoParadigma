@@ -124,7 +124,7 @@ InterfazPartida >> bordeInferiorPaneles [
 { #category : 'as yet unclassified' }
 InterfazPartida >> cargarSprites [
     | raiz archivos |
-    raiz := (Smalltalk globals at: #LongcatCarpeta ifAbsent: [ FileLocator imageDirectory ]) asFileReference.
+    raiz := (Smalltalk globals at: #LongcatApp) carpetaDeImagenes.
     archivos := {
         #cabezaAbajo -> 'Gato abajo.png'.
         #cabezaArriba -> 'Gato arriba.png'.
