@@ -196,12 +196,6 @@ LongcatApp >> salir [
 ]
 
 { #category : 'skins' }
-LongcatApp >> skin [
-	^ skin
-
-]
-
-{ #category : 'skins' }
 LongcatApp >> skinActual [
 	^ skinActual
 ]
@@ -209,18 +203,6 @@ LongcatApp >> skinActual [
 { #category : 'skins' }
 LongcatApp >> skinsDisponibles [
 	^ { SkinGato originalConImagenes: imagenes }
-]
-
-{ #category : 'skins' }
-LongcatApp >> spritesDelGato [
-	"Cabezas del gato para la skin elegida. Por ahora solo existe la original:
-	 para agregar una skin nueva, cargar sus PNG con otras claves y devolverlas aca segun skin."
-	| cabezas |
-	cabezas := Dictionary new.
-	#(#cabezaAbajo #cabezaArriba #cabezaDerecha #cabezaIzquierda) do: [ :unaClave |
-		(self imagen: unaClave) ifNotNil: [ :forma | cabezas at: unaClave put: forma ] ].
-	^ cabezas
-
 ]
 
 { #category : 'stepping' }

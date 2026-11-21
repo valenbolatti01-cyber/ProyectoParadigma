@@ -49,11 +49,6 @@ Nivel >> columnas [
     ^ mapa first size
 ]
 
-{ #category : 'testing' }
-Nivel >> esElUltimo [
-    ^ numero = Nivel cantidad
-]
-
 { #category : 'accessing' }
 Nivel >> filas [
     ^ mapa size

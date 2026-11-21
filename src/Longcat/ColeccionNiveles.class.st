@@ -33,31 +33,6 @@ ColeccionNiveles >> cantidad [
     ^ self niveles size
 ]
 
-{ #category : 'accessing' }
-ColeccionNiveles >> claveIcono [
-    self subclassResponsibility
-]
-
-{ #category : 'theme' }
-ColeccionNiveles >> colorAcento [
-    ^ EstiloLongcat colorVerde
-]
-
-{ #category : 'theme' }
-ColeccionNiveles >> colorBloque [
-    ^ EstiloLongcat colorPizarra
-]
-
-{ #category : 'theme' }
-ColeccionNiveles >> colorPantalla [
-    ^ EstiloLongcat colorPantalla
-]
-
-{ #category : 'theme' }
-ColeccionNiveles >> colorTema [
-    ^ EstiloLongcat colorMorado
-]
-
 { #category : 'testing' }
 ColeccionNiveles >> estaDisponible [
     ^ self niveles notEmpty
@@ -81,9 +56,4 @@ ColeccionNiveles >> niveles [
 { #category : 'accessing' }
 ColeccionNiveles >> nombre [
     self subclassResponsibility
-]
-
-{ #category : 'theme' }
-ColeccionNiveles >> tituloVentana [
-    ^ 'longcat.exe'
 ]

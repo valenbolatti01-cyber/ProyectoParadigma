@@ -9,14 +9,6 @@ Class {
 }
 
 { #category : 'support' }
-NivelTest >> direccionPara: unSimbolo [
-    unSimbolo = #arriba ifTrue: [ ^ (Smalltalk globals at: #Arriba) new ].
-    unSimbolo = #abajo ifTrue: [ ^ (Smalltalk globals at: #Abajo) new ].
-    unSimbolo = #izquierda ifTrue: [ ^ (Smalltalk globals at: #Izquierda) new ].
-    ^ (Smalltalk globals at: #Derecha) new
-]
-
-{ #category : 'support' }
 NivelTest >> niveles [
     ^ Nivel todos
 ]

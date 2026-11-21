@@ -8,16 +8,6 @@ Class {
 	#package : 'Longcat'
 }
 
-{ #category : 'accessing' }
-NivelesDragonBall >> claveIcono [
-    ^ #dragonBall
-]
-
-{ #category : 'theme' }
-NivelesDragonBall >> colorTema [
-    ^ EstiloLongcat colorNaranja
-]
-
 { #category : 'levels' }
 NivelesDragonBall >> niveles [
     "Agregar aqui los objetos Nivel tematicos de Dragon Ball."
@@ -27,9 +17,4 @@ NivelesDragonBall >> niveles [
 { #category : 'accessing' }
 NivelesDragonBall >> nombre [
     ^ 'Dragon Ball'
-]
-
-{ #category : 'theme' }
-NivelesDragonBall >> tituloVentana [
-    ^ 'dragonball.exe'
 ]

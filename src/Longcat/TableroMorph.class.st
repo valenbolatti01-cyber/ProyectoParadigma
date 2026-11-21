@@ -26,17 +26,6 @@ TableroMorph class >> partida: unaPartida skin: unaSkin [
 	^ self new setPartida: unaPartida skin: unaSkin
 ]
 
-{ #category : 'instance creation' }
-TableroMorph class >> partida: unaPartida skin: unaSkin coleccion: unaColeccion [
-	^ self new setPartida: unaPartida skin: unaSkin coleccion: unaColeccion
-]
-
-{ #category : 'instance creation' }
-TableroMorph class >> partida: unaPartida sprites: unosSprites [
-	^ self new setPartida: unaPartida sprites: unosSprites
-
-]
-
 { #category : 'layout' }
 TableroMorph >> actualizarExtension [
 	self extent: ((partida columnas * tamCelda) + (2 * borde))
@@ -52,23 +41,6 @@ TableroMorph >> ajustarA: unTamano [
 	self actualizarExtension.
 	self changed.
 	^ self
-]
-
-{ #category : 'initialization' }
-TableroMorph >> ajustarA: unTamano sprites: unosSprites [
-    "Agranda o achica las casillas para que el monitor entre en el tamano disponible"
-    | tamano |
-    tamCelda := (((unTamano x - (2 * borde)) // partida columnas)
-        min: ((unTamano y - (2 * borde) - barra - pie) // partida filas)).
-    tamCelda := (tamCelda min: 80) max: 16.
-    tamano := tamCelda + 4.
-    #(#cabezaArriba #cabezaAbajo #cabezaDerecha #cabezaIzquierda) do: [ :clave |
-        cabezas at: clave put: ((unosSprites at: clave) scaledToSize: tamano @ tamano) ].
-    self extent: ((partida columnas * tamCelda) + (2 * borde))
-        @ ((partida filas * tamCelda) + (2 * borde) + barra + pie).
-    self changed.
-    ^ self
-
 ]
 
 { #category : 'private - animation' }
@@ -118,16 +90,6 @@ TableroMorph >> cabezaEscaladaPara: unaDireccion [
 ]
 
 { #category : 'private - drawing' }
-TableroMorph >> colorAcento [
-	^ coleccion ifNotNil: [ coleccion colorAcento ] ifNil: [ EstiloLongcat colorVerde ]
-]
-
-{ #category : 'private - drawing' }
-TableroMorph >> colorBloque [
-	^ coleccion ifNotNil: [ coleccion colorBloque ] ifNil: [ EstiloLongcat colorPizarra ]
-]
-
-{ #category : 'private - drawing' }
 TableroMorph >> colorCodigo: unNumeroDeLinea [
 	| colores |
 	colores := {
@@ -138,58 +100,6 @@ TableroMorph >> colorCodigo: unNumeroDeLinea [
 	^ (colores at: ((unNumeroDeLinea - 1) \\ colores size) + 1)
 		mixed: 0.45
 		with: EstiloLongcat colorPantalla
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorCrema [
-	^ Color r: 245 g: 214 b: 160 range: 255
-
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorMarco [
-	^ Color r: 26 g: 29 b: 38 range: 255
-
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorMorado [
-	^ Color r: 139 g: 115 b: 214 range: 255
-
-]
-
-{ #category : 'private - drawing' }
-TableroMorph >> colorPantalla [
-	^ coleccion ifNotNil: [ coleccion colorPantalla ] ifNil: [ EstiloLongcat colorPantalla ]
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorPelaje [
-	^ Color r: 233 g: 154 b: 69 range: 255
-
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorPizarra [
-	^ Color r: 52 g: 59 b: 73 range: 255
-
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorRayas [
-	^ Color r: 196 g: 110 b: 40 range: 255
-
-]
-
-{ #category : 'private - drawing' }
-TableroMorph >> colorTema [
-	^ coleccion ifNotNil: [ coleccion colorTema ] ifNil: [ EstiloLongcat colorMorado ]
-]
-
-{ #category : 'private - colors' }
-TableroMorph >> colorVerde [
-	^ Color r: 140 g: 203 b: 103 range: 255
-
 ]
 
 { #category : 'animation' }
@@ -474,34 +384,6 @@ TableroMorph >> setPartida: unaPartida skin: unaSkin [
 	tamanoCache := 0.
 	self actualizarExtension.
 	^ self
-]
-
-{ #category : 'initialization' }
-TableroMorph >> setPartida: unaPartida skin: unaSkin coleccion: unaColeccion [
-	partida := unaPartida.
-	skin := unaSkin.
-	coleccion := unaColeccion.
-	tamCelda := (288 // (partida filas max: partida columnas)) min: 48.
-	cabezasEscaladas removeAll.
-	tamanoCache := 0.
-	self actualizarExtension.
-	^ self
-]
-
-{ #category : 'initialization' }
-TableroMorph >> setPartida: unaPartida sprites: unosSprites [
-	| tamano |
-	partida := unaPartida.
-	"Los niveles chicos usan casillas mas grandes (como maximo 48), los grandes 36"
-	tamCelda := (288 // (partida filas max: partida columnas)) min: 48.
-	"La cabeza se escala una sola vez, un poco mas grande que la casilla"
-	tamano := tamCelda + 4.
-	#(#cabezaArriba #cabezaAbajo #cabezaDerecha #cabezaIzquierda) do: [ :clave |
-		cabezas at: clave put: ((unosSprites at: clave) scaledToSize: tamano @ tamano) ].
-	self extent: ((partida columnas * tamCelda) + (2 * borde))
-		@ ((partida filas * tamCelda) + (2 * borde) + barra + pie).
-	^ self
-
 ]
 
 { #category : 'accessing' }

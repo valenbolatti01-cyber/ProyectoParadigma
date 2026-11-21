@@ -8,16 +8,6 @@ Class {
 	#package : 'Longcat'
 }
 
-{ #category : 'accessing' }
-NivelesPokemon >> claveIcono [
-    ^ #pokemon
-]
-
-{ #category : 'theme' }
-NivelesPokemon >> colorTema [
-    ^ EstiloLongcat colorRosa
-]
-
 { #category : 'levels' }
 NivelesPokemon >> niveles [
     "Agregar aqui los objetos Nivel tematicos de Pokemon."
@@ -27,9 +17,4 @@ NivelesPokemon >> niveles [
 { #category : 'accessing' }
 NivelesPokemon >> nombre [
     ^ 'Pokémon'
-]
-
-{ #category : 'theme' }
-NivelesPokemon >> tituloVentana [
-    ^ 'pokemon.exe'
 ]

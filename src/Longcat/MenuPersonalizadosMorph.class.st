@@ -55,16 +55,6 @@ MenuPersonalizadosMorph >> drawOn: aCanvas [
 ]
 
 { #category : 'building' }
-MenuPersonalizadosMorph >> tarjeta: unaClave titulo: unTitulo color: unColor [
-	"Sin accion por ahora: los niveles de cada mundo se desarrollan despues"
-	^ (TarjetaMorph imagen: (self imagen: unaClave) accion: nil de: app)
-		titulo: unTitulo;
-		colorBorde: unColor;
-		yourself
-
-]
-
-{ #category : 'building' }
 MenuPersonalizadosMorph >> tarjetaParaColeccion: unaColeccion [
 	| accion argumentos tarjeta |
 	accion := unaColeccion estaDisponible ifTrue: [ #jugarColeccion: ] ifFalse: [ nil ].

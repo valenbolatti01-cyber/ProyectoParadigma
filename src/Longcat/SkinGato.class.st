@@ -141,11 +141,3 @@ SkinGato >> inicializarIdentificador: unId nombre: unNombre colorCuerpo: unColor
 SkinGato >> nombre [
     ^ nombre
 ]
-
-{ #category : 'testing' }
-SkinGato >> tieneSprites [
-    ^ cabezaArriba notNil
-        and: [ cabezaAbajo notNil
-            and: [ cabezaDerecha notNil
-                and: [ cabezaIzquierda notNil ] ] ]
-]

@@ -18,11 +18,6 @@ Class {
 	#package : 'Longcat'
 }
 
-{ #category : 'instance creation' }
-PanelNivelesMorph class >> controlador: unControlador [
-    ^ self new setControlador: unControlador
-]
-
 { #category : 'updating' }
 PanelNivelesMorph >> actualizarConProgreso: unProgreso [
     self sincronizarCantidadNiveles: unProgreso cantidadNiveles.
@@ -31,12 +26,6 @@ PanelNivelesMorph >> actualizarConProgreso: unProgreso [
         boton color: (self colorParaEstadoNivel: (unProgreso estadoNivel: numero)) ].
     self changed.
     ^ self
-]
-
-{ #category : 'layout' }
-PanelNivelesMorph >> bounds: unRectangulo [
-    super bounds: unRectangulo.
-    self reacomodar
 ]
 
 { #category : 'private - updating' }
@@ -101,16 +90,6 @@ PanelNivelesMorph >> nuevoBoton: unaEtiqueta accion: unSelector tamano: unTamano
     ^ boton
 ]
 
-{ #category : 'private - building' }
-PanelNivelesMorph >> nuevoTexto: unContenido color: unColor tamano: unTamano [
-    | texto |
-    texto := StringMorph new contents: unContenido.
-    texto font: (EstiloLongcat fuente: unTamano).
-    texto color: unColor.
-    self addMorph: texto.
-    ^ texto
-]
-
 { #category : 'layout' }
 PanelNivelesMorph >> reacomodar [
     | origen anchoUtil cantidad anchoBoton paso total inicio |
@@ -140,13 +119,6 @@ PanelNivelesMorph >> reacomodar [
 PanelNivelesMorph >> revisarAviso [
     (avisoHasta notNil and: [ Time millisecondClockValue > avisoHasta ])
         ifTrue: [ self limpiarAviso ].
-    ^ self
-]
-
-{ #category : 'initialization' }
-PanelNivelesMorph >> setControlador: unControlador [
-    controlador := unControlador.
-    self construirControles.
     ^ self
 ]
 

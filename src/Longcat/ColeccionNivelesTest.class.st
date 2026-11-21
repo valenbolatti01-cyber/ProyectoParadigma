@@ -9,17 +9,6 @@ Class {
 }
 
 { #category : 'tests - extensibility' }
-ColeccionNivelesTest >> testColeccionesPersonalizadasTienenIdentidadYColoresPropios [
-    | personalizadas nombres |
-    personalizadas := ColeccionNiveles personalizadas.
-    self assert: personalizadas size = 3.
-    nombres := personalizadas collect: [ :c | c nombre ].
-    self assert: (nombres includes: 'Minecraft').
-    self assert: (nombres includes: 'Pokémon').
-    self assert: (nombres includes: 'Dragon Ball')
-]
-
-{ #category : 'tests - extensibility' }
 ColeccionNivelesTest >> testColeccionesPersonalizadasTienenNombresPropios [
     | personalizadas nombres |
     personalizadas := ColeccionNiveles personalizadas.

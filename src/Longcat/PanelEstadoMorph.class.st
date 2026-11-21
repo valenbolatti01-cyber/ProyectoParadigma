@@ -30,12 +30,6 @@ PanelEstadoMorph >> actualizarConPartida: unaPartida progreso: unProgreso [
     ^ self
 ]
 
-{ #category : 'layout' }
-PanelEstadoMorph >> bounds: unRectangulo [
-    super bounds: unRectangulo.
-    self reacomodar
-]
-
 { #category : 'private - updating' }
 PanelEstadoMorph >> colorParaEstado: unEstado [
     | colores |
@@ -126,16 +120,6 @@ PanelEstadoMorph >> mensajeEstadoParaPartida: unaPartida progreso: unProgreso [
             ifFalse: [ 'Nivel completado!' ]).
         #derrota -> 'Sin espacio. Reiniciando...' } asDictionary.
     ^ mensajes at: unaPartida estado ifAbsent: [ unaPartida estado asString ]
-]
-
-{ #category : 'private - building' }
-PanelEstadoMorph >> nuevoTexto: unContenido color: unColor tamano: unTamano [
-    | texto |
-    texto := StringMorph new contents: unContenido.
-    texto font: (EstiloLongcat fuente: unTamano).
-    texto color: unColor.
-    self addMorph: texto.
-    ^ texto
 ]
 
 { #category : 'layout' }

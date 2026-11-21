@@ -41,12 +41,6 @@ VictoriaMorph >> colorCartel [
 ]
 
 { #category : 'private - drawing' }
-VictoriaMorph >> colorMorado [
-	^ Color r: 139 g: 115 b: 214 range: 255
-
-]
-
-{ #category : 'private - drawing' }
 VictoriaMorph >> colorTitulo [
 	^ EstiloLongcat colorAmarillo
 ]

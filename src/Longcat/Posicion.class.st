@@ -70,9 +70,3 @@ Posicion >> printOn: unFlujo [
         print: columna;
         nextPut: $)
 ]
-
-{ #category : 'initialization' }
-Posicion >> setFila: unaFila columna: unaColumna [
-    fila := unaFila.
-    columna := unaColumna
-]

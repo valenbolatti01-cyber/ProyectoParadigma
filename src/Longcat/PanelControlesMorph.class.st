@@ -12,17 +12,6 @@ Class {
 	#package : 'Longcat'
 }
 
-{ #category : 'instance creation' }
-PanelControlesMorph class >> controlador: unControlador [
-    ^ self new setControlador: unControlador
-]
-
-{ #category : 'layout' }
-PanelControlesMorph >> bounds: unRectangulo [
-    super bounds: unRectangulo.
-    self reacomodar
-]
-
 { #category : 'building' }
 PanelControlesMorph >> construirControles [
     textos at: #mover put: (self nuevoTexto: 'Mover' color: EstiloLongcat colorVerde tamano: 12).
@@ -92,16 +81,6 @@ PanelControlesMorph >> nuevoBotonDireccion: unaEtiqueta direccion: unaDireccion 
     ^ boton
 ]
 
-{ #category : 'private - building' }
-PanelControlesMorph >> nuevoTexto: unContenido color: unColor tamano: unTamano [
-    | texto |
-    texto := StringMorph new contents: unContenido.
-    texto font: (EstiloLongcat fuente: unTamano).
-    texto color: unColor.
-    self addMorph: texto.
-    ^ texto
-]
-
 { #category : 'layout' }
 PanelControlesMorph >> reacomodar [
     | origen centroX |
@@ -115,13 +94,6 @@ PanelControlesMorph >> reacomodar [
     (botones at: #derecha) position: origen + ((centroX + 26) @ 92).
     (textos at: #ayuda1) position: origen + (16 @ 136).
     (textos at: #ayuda2) position: origen + (16 @ 154).
-    ^ self
-]
-
-{ #category : 'initialization' }
-PanelControlesMorph >> setControlador: unControlador [
-    controlador := unControlador.
-    self construirControles.
     ^ self
 ]
 
