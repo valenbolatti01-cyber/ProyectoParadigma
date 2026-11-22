@@ -57,6 +57,12 @@ Gato >> posicionesOcupadas [
     ^ segmentos asArray
 ]
 
+{ #category : 'copying' }
+Gato >> postCopy [
+    super postCopy.
+    segmentos := segmentos copy
+]
+
 { #category : 'changing state' }
 Gato >> reiniciarEn: unaPosicion [
     unaPosicion esPosicion

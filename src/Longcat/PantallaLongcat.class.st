@@ -215,6 +215,15 @@ PantallaLongcat >> forma: unaClave ajustadaA: unTamano [
 ]
 
 { #category : 'images' }
+PantallaLongcat >> forma: unaClave ajustadaAAncho: unAncho [
+	"La imagen escalada al ancho pedido conservando su proporcion (nil si falta la imagen)"
+	| original |
+	original := self imagen: unaClave.
+	original ifNil: [ ^ nil ].
+	^ self forma: unaClave ajustadaA: unAncho @ ((unAncho * original height / original width) rounded)
+]
+
+{ #category : 'images' }
 PantallaLongcat >> imagen: unaClave [
 	^ app ifNotNil: [ :unaApp | unaApp imagen: unaClave ]
 ]

@@ -1,5 +1,5 @@
 "
-Objeto de dominio responsable de gestionar la secuencia de niveles, el estado de desbloqueo, los niveles completados y la skin seleccionada actualmente.
+Objeto de dominio responsable de gestionar la secuencia de niveles, el estado de desbloqueo, los niveles completados, las estrellas obtenidas en cada nivel (se conserva la mejor calificacion) y la skin seleccionada actualmente.
 "
 Class {
 	#name : 'ProgresoJuego',
@@ -9,6 +9,7 @@ Class {
 		'nivelActual',
 		'nivelMaximo',
 		'nivelesCompletados',
+		'estrellasPorNivel',
 		'skinActual'
 	],
 	#category : 'Longcat',
@@ -78,12 +79,25 @@ ProgresoJuego >> estadoNivel: unNumero [
     ^ #bloqueado
 ]
 
+{ #category : 'accessing' }
+ProgresoJuego >> estrellasMaximas [
+    ^ coleccionNiveles niveles
+        inject: 0
+        into: [ :total :nivel | total + nivel rango cantidadDeEstrellas ]
+]
+
+{ #category : 'accessing' }
+ProgresoJuego >> estrellasNivel: unNumero [
+    ^ estrellasPorNivel at: unNumero ifAbsent: [ 0 ]
+]
+
 { #category : 'initialization' }
 ProgresoJuego >> inicializarConColeccion: unaColeccion skin: unaSkin [
     coleccionNiveles := unaColeccion.
     nivelActual := 1.
     nivelMaximo := 1.
     nivelesCompletados := Set new.
+    estrellasPorNivel := Dictionary new.
     skinActual := unaSkin.
     ^ self
 ]
@@ -129,6 +143,18 @@ ProgresoJuego >> registrarVictoria [
 ]
 
 { #category : 'progression' }
+ProgresoJuego >> registrarVictoriaConMovimientos: unaCantidadDeMovimientos [
+    "Registra la victoria del nivel actual y responde las estrellas ganadas (0 si el nivel no tiene calificacion). Conserva la mejor calificacion del nivel."
+    | obtenidas |
+    self registrarVictoria.
+    obtenidas := self nivelActualObjeto estrellasPara: unaCantidadDeMovimientos.
+    estrellasPorNivel
+        at: nivelActual
+        put: ((self estrellasNivel: nivelActual) max: obtenidas).
+    ^ obtenidas
+]
+
+{ #category : 'progression' }
 ProgresoJuego >> retrocederNivel [
     nivelActual <= 1 ifTrue: [ ^ false ].
     nivelActual := nivelActual - 1.
@@ -146,4 +172,9 @@ ProgresoJuego >> textoCompletados [
     ^ (nivelesCompletados asSortedCollection
         inject: ''
         into: [ :texto :numero | texto, numero asString, ' ' ]) trimBoth
+]
+
+{ #category : 'accessing' }
+ProgresoJuego >> totalEstrellas [
+    ^ estrellasPorNivel inject: 0 into: [ :total :estrellas | total + estrellas ]
 ]

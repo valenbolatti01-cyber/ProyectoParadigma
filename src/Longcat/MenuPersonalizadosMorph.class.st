@@ -51,7 +51,7 @@ MenuPersonalizadosMorph >> drawOn: aCanvas [
 		chispasEn: (self virtual: (1040 @ 128 extent: 0 @ 0)) origin
 		tamano: ((6 * self escala) rounded max: 2)
 		sobre: aCanvas.
-	self dibujarPie: 'Próximamente: niveles temáticos para cada mundo' sobre: aCanvas
+	self dibujarPie: 'Elegí un mundo: 10 niveles y hasta 3 estrellas en cada uno' sobre: aCanvas
 ]
 
 { #category : 'building' }

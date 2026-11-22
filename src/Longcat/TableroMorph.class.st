@@ -233,6 +233,22 @@ TableroMorph >> dibujarCuerpoEn: aCanvas color: unColor extra: unExtra [
 ]
 
 { #category : 'private - drawing' }
+TableroMorph >> dibujarEscenarioEn: aCanvas [
+	"Todo lo que se dibuja detras de las casillas y del gato (las subclases tematicas lo reemplazan)"
+	self dibujarMonitorEn: aCanvas.
+	self dibujarBarraEn: aCanvas.
+	aCanvas fillRectangle: self pantalla color: EstiloLongcat colorPantalla.
+	self dibujarCodigoEn: aCanvas.
+	^ self
+]
+
+{ #category : 'private - drawing' }
+TableroMorph >> dibujarFiltrosEn: aCanvas [
+	"Efecto que se dibuja por encima de todo (las subclases tematicas pueden quitarlo)"
+	^ self dibujarScanlinesEn: aCanvas
+]
+
+{ #category : 'private - drawing' }
 TableroMorph >> dibujarMonitorEn: aCanvas [
 	| marco cuello base anchoBase |
 	marco := self marco.
@@ -300,17 +316,14 @@ TableroMorph >> drawOn: aCanvas [
 	colorCuerpo := skin ifNotNil: [ skin colorCuerpo ] ifNil: [ EstiloLongcat colorNaranja ].
 	colorExterno := skin ifNotNil: [ skin colorContornoExterno ] ifNil: [ Color white ].
 	colorInterno := skin ifNotNil: [ skin colorContornoInterno ] ifNil: [ Color black ].
-	self dibujarMonitorEn: aCanvas.
-	self dibujarBarraEn: aCanvas.
-	aCanvas fillRectangle: self pantalla color: EstiloLongcat colorPantalla.
-	self dibujarCodigoEn: aCanvas.
+	self dibujarEscenarioEn: aCanvas.
 	self dibujarCasillasEn: aCanvas.
 	self dibujarCuerpoEn: aCanvas color: colorExterno extra: 8.
 	self dibujarCuerpoEn: aCanvas color: colorInterno extra: 4.
 	self dibujarCuerpoEn: aCanvas color: colorCuerpo extra: 0.
 	self dibujarRayasEn: aCanvas.
 	self dibujarCabezaEn: aCanvas.
-	self dibujarScanlinesEn: aCanvas
+	self dibujarFiltrosEn: aCanvas
 ]
 
 { #category : 'private - drawing' }

@@ -9,6 +9,14 @@ Class {
 }
 
 { #category : 'tests - extensibility' }
+ColeccionNivelesTest >> testCadaColeccionTieneUnIdentificadorPropio [
+    | identificadores |
+    identificadores := ColeccionNiveles todas collect: [ :coleccion | coleccion identificador ].
+    self assert: identificadores asSet size = identificadores size.
+    self assert: identificadores asSet = #(#normales #minecraft #pokemon #dragonBall) asSet
+]
+
+{ #category : 'tests - extensibility' }
 ColeccionNivelesTest >> testColeccionesPersonalizadasTienenNombresPropios [
     | personalizadas nombres |
     personalizadas := ColeccionNiveles personalizadas.
@@ -17,6 +25,12 @@ ColeccionNivelesTest >> testColeccionesPersonalizadasTienenNombresPropios [
     self assert: (nombres includes: 'Minecraft').
     self assert: (nombres includes: 'Pokémon').
     self assert: (nombres includes: 'Dragon Ball')
+]
+
+{ #category : 'tests - levels' }
+ColeccionNivelesTest >> testLasColeccionesPersonalizadasEstanDisponibles [
+    ColeccionNiveles personalizadas do: [ :coleccion |
+        self assert: coleccion estaDisponible description: coleccion nombre ]
 ]
 
 { #category : 'tests - levels' }

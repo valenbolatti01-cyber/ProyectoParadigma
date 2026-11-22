@@ -43,6 +43,12 @@ ColeccionNiveles >> hash [
     ^ self class hash
 ]
 
+{ #category : 'accessing' }
+ColeccionNiveles >> identificador [
+    "Simbolo estable que identifica al mundo (lo usa la interfaz para elegir su aspecto sin preguntar por clases)"
+    self subclassResponsibility
+]
+
 { #category : 'levels' }
 ColeccionNiveles >> nivel: unNumero [
     ^ self niveles at: unNumero

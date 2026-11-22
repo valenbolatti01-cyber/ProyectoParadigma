@@ -1,5 +1,5 @@
 "
-Coordina tablero y gato, acepta movimientos mientras esta activa, actualiza el estado terminal y reinicia el mismo nivel. No imprime ni recibe entradas de interfaz.
+Coordina tablero y gato, acepta movimientos mientras esta activa, actualiza el estado terminal y reinicia el mismo nivel. Cuenta los movimientos realizados: un movimiento es una accion valida que desplaza al gato, sin importar cuantas casillas recorra. No imprime ni recibe entradas de interfaz.
 "
 Class {
 	#name : 'Partida',
@@ -8,7 +8,8 @@ Class {
 		'tablero',
 		'gato',
 		'estado',
-		'posicionInicial'
+		'posicionInicial',
+		'movimientos'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -63,6 +64,11 @@ Partida >> cantidadDisponibles [
 ]
 
 { #category : 'accessing' }
+Partida >> cantidadMovimientos [
+    ^ movimientos
+]
+
+{ #category : 'accessing' }
 Partida >> casillaBloqueadaEn: unaPosicion [
     ^ tablero estaBloqueada: unaPosicion
 ]
@@ -112,6 +118,7 @@ Partida >> inicializarFilas: unaCantidadDeFilas columnas: unaCantidadDeColumnas 
     posicionInicial := Posicion fila: unaPosicion fila columna: unaPosicion columna.
     gato := Gato en: posicionInicial.
     tablero ocupar: posicionInicial.
+    movimientos := 0.
     estado := #activa.
     self actualizarEstado.
     ^ self
@@ -128,11 +135,14 @@ Partida >> moverEn: unaDireccion [
     self estaActiva ifFalse: [ ^ self ].
     unaDireccion esDireccion
         ifFalse: [ self error: 'Se necesita una direccion de movimiento' ].
+    "Una accion que no desplaza al gato no es un movimiento: no se cuenta"
+    (self puedeMoverseEn: unaDireccion) ifFalse: [ ^ self ].
     siguiente := unaDireccion posicionSiguienteA: gato cabeza.
     [ tablero estaDisponible: siguiente ] whileTrue: [
         tablero ocupar: siguiente.
         gato avanzarA: siguiente enDireccion: unaDireccion.
         siguiente := unaDireccion posicionSiguienteA: gato cabeza ].
+    movimientos := movimientos + 1.
     self actualizarEstado.
     ^ self
 ]
@@ -147,6 +157,13 @@ Partida >> posicionesOcupadas [
     ^ gato posicionesOcupadas
 ]
 
+{ #category : 'copying' }
+Partida >> postCopy [
+    super postCopy.
+    tablero := tablero copy.
+    gato := gato copy
+]
+
 { #category : 'testing' }
 Partida >> puedeMoverseEn: unaDireccion [
     unaDireccion esDireccion ifFalse: [ ^ false ].
@@ -158,6 +175,7 @@ Partida >> reiniciar [
     tablero reiniciar.
     gato reiniciarEn: posicionInicial.
     tablero ocupar: posicionInicial.
+    movimientos := 0.
     estado := #activa.
     self actualizarEstado.
     ^ self

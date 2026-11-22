@@ -56,8 +56,42 @@ ProgresoJuegoTest >> testIniciaEnNivelUnoConRestoBloqueado [
     self assert: (progreso estadoNivel: 2) = #bloqueado
 ]
 
+{ #category : 'tests - stars' }
+ProgresoJuegoTest >> testLaVictoriaEnUnMundoOtorgaEstrellasSegunLosMovimientos [
+    | progresoMundo nivel |
+    progresoMundo := ProgresoJuego conColeccion: NivelesMinecraft new.
+    nivel := progresoMundo nivelActualObjeto.
+    self assert: (progresoMundo registrarVictoriaConMovimientos: nivel rango minimo) = 3.
+    self assert: (progresoMundo estrellasNivel: 1) = 3.
+    self assert: progresoMundo nivelMaximo = 2.
+    self assert: progresoMundo estrellasMaximas = 30
+]
+
+{ #category : 'tests - stars' }
+ProgresoJuegoTest >> testLosNivelesNormalesNoOtorganEstrellas [
+    self assert: (progreso registrarVictoriaConMovimientos: 7) = 0.
+    self assert: (progreso estrellasNivel: 1) = 0.
+    self assert: progreso totalEstrellas = 0.
+    self assert: progreso estrellasMaximas = 0.
+    self assert: (progreso estaCompletadoNivel: 1)
+]
+
 { #category : 'tests - progression' }
 ProgresoJuegoTest >> testNoPermiteSaltarANivelBloqueado [
     self deny: (progreso irANivel: 3).
     self assert: progreso nivelActual = 1
+]
+
+{ #category : 'tests - stars' }
+ProgresoJuegoTest >> testSeConservaLaMejorCalificacionDelNivel [
+    | progresoMundo nivel |
+    progresoMundo := ProgresoJuego conColeccion: NivelesMinecraft new.
+    nivel := progresoMundo nivelActualObjeto.
+    progresoMundo registrarVictoriaConMovimientos: nivel rango maximo.
+    self assert: (progresoMundo estrellasNivel: 1) = 1.
+    progresoMundo registrarVictoriaConMovimientos: nivel rango minimo.
+    self assert: (progresoMundo estrellasNivel: 1) = 3.
+    progresoMundo registrarVictoriaConMovimientos: nivel rango maximo.
+    self assert: (progresoMundo estrellasNivel: 1) = 3.
+    self assert: progresoMundo totalEstrellas = 3
 ]

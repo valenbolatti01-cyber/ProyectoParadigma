@@ -8,6 +8,11 @@ Class {
 	#package : 'Longcat'
 }
 
+{ #category : 'accessing' }
+NivelesNormales >> identificador [
+    ^ #normales
+]
+
 { #category : 'levels' }
 NivelesNormales >> niveles [
     "Mapa: # pared, . casilla libre, I inicio del gato (una sola I por nivel).

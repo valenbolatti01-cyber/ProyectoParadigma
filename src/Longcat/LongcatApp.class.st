@@ -9,6 +9,7 @@ Class {
 		'progresos',
 		'partidasAbiertas',
 		'imagenes',
+		'rutas',
 		'skinActual'
 	],
 	#classInstVars : [
@@ -35,6 +36,7 @@ LongcatApp class >> carpetaDeImagenes [
 			on: Error do: [ :e | false ] ].
 	candidatas := OrderedCollection new.
 	carpetaImagenes ifNotNil: [ :ruta | candidatas add: ruta asFileReference ].
+	candidatas addAll: self carpetasDelRepositorio.
 	candidatas add: FileLocator imageDirectory resolve.
 	candidatas add: FileLocator workingDirectory resolve.
 	[ candidatas
@@ -61,6 +63,16 @@ LongcatApp class >> carpetaDeImagenes: unaRuta [
 	^ carpetaImagenes
 ]
 
+{ #category : 'images' }
+LongcatApp class >> carpetasDelRepositorio [
+	"Carpeta assets del proyecto clonado con Iceberg (Documents/Pharo/iceberg/ProyectoParadigma/assets). Se prueba primero porque es directa: no hace falta recorrer todo Documents."
+	^ [ {
+		(FileLocator documents / 'Pharo' / 'iceberg' / 'ProyectoParadigma' / 'assets') resolve.
+		(FileLocator home / 'Documents' / 'Pharo' / 'iceberg' / 'ProyectoParadigma' / 'assets') resolve } ]
+		on: Error
+		do: [ :e | #() ]
+]
+
 { #category : 'opening' }
 LongcatApp >> abrir [
 	self cargarImagenes.
@@ -72,7 +84,24 @@ LongcatApp >> abrir [
 ]
 
 { #category : 'images' }
+LongcatApp >> archivoDe: unaRutaRelativa entre: unosArchivos [
+	"El archivo cuya ruta termina en la ruta relativa pedida (sin distinguir mayusculas), o nil"
+	| sufijo |
+	sufijo := '/', unaRutaRelativa asLowercase.
+	^ unosArchivos
+		detect: [ :archivo | (archivo fullName asLowercase copyReplaceAll: '\' with: '/') endsWith: sufijo ]
+		ifNone: [ nil ]
+]
+
+{ #category : 'images' }
 LongcatApp >> archivosDeImagenes [
+	"Imagenes generales mas las de cada tema de mundo (cada TemaMundo declara las suyas)"
+	^ self archivosGenerales , TemaMundo archivosDeImagenes
+]
+
+{ #category : 'images' }
+LongcatApp >> archivosGenerales [
+	"Clave -> ruta relativa dentro de la carpeta de assets (sirve el nombre solo o con subcarpetas)"
 	^ {
 		#cabezaAbajo -> 'Gato abajo.png'.
 		#cabezaArriba -> 'Gato arriba.png'.
@@ -93,26 +122,36 @@ LongcatApp >> archivosDeImagenes [
 		#botonSalir -> 'boton_salir.png'.
 		#minecraft -> 'Minecraft.png'.
 		#pokemon -> 'Pokemon.png'.
-		#dragonBall -> 'Dragon_Ball.png' }
+		#dragonBall -> 'Dragon_Ball.png'.
+		#etiquetaMovimientos -> 'marcador general/etiqueta_movimientos.png'.
+		#panelResultado -> 'marcador general/panel_resultado.png'.
+		#estrellaDorada -> 'marcador general/estrella_dorada.png'.
+		#estrellaGris -> 'marcador general/estrella_gris.png'.
+		#botonSiguienteNivel -> 'marcador general/boton_siguiente_nivel.png'.
+		#botonReintentar -> 'marcador general/boton_reintentar.png' }
 ]
 
 { #category : 'images' }
 LongcatApp >> cargarImagenes [
-	| raiz nombres faltantes clave |
+	"Ubica los PNG una sola vez. Las cabezas del gato se cargan ya (la skin las necesita); el resto se lee la primera vez que alguna pantalla lo pide, para que abrir el juego no decodifique todos los PNG grandes de todos los mundos."
+	| raiz archivos faltantes |
 	raiz := self class carpetaDeImagenes.
-	nombres := Dictionary new.
-	self archivosDeImagenes do: [ :par | nombres at: par value asLowercase put: par key ].
+	archivos := raiz allChildren select: [ :archivo | archivo isFile ].
 	imagenes := Dictionary new.
-	raiz allChildren do: [ :archivo |
-		(archivo isFile and: [ nombres includesKey: archivo basename asLowercase ]) ifTrue: [
-			clave := nombres at: archivo basename asLowercase.
-			(imagenes includesKey: clave) ifFalse: [
-				imagenes at: clave put: (ImageReadWriter formFromFileNamed: archivo fullName) ] ] ].
-	faltantes := #(#cabezaAbajo #cabezaArriba #cabezaDerecha #cabezaIzquierda)
-		reject: [ :unaClave | imagenes includesKey: unaClave ].
+	rutas := Dictionary new.
+	self archivosDeImagenes do: [ :par |
+		(self archivoDe: par value entre: archivos) ifNotNil: [ :archivo |
+			rutas at: par key put: archivo ] ].
+	self clavesDelGato do: [ :unaClave | self imagen: unaClave ].
+	faltantes := self clavesDelGato reject: [ :unaClave | imagenes includesKey: unaClave ].
 	faltantes isEmpty ifFalse: [
 		^ self error: 'No encuentro las imagenes del gato (Gato abajo.png, Gato arriba.png...) dentro de: ', raiz fullName ].
 	^ imagenes
+]
+
+{ #category : 'images' }
+LongcatApp >> clavesDelGato [
+	^ #(#cabezaAbajo #cabezaArriba #cabezaDerecha #cabezaIzquierda)
 ]
 
 { #category : 'skins' }
@@ -126,13 +165,18 @@ LongcatApp >> elegirSkin: unaSkin [
 
 { #category : 'images' }
 LongcatApp >> imagen: unaClave [
-	^ imagenes at: unaClave ifAbsent: [ nil ]
+	"La imagen pedida (se lee del disco la primera vez) o nil si no esta en los assets"
+	^ imagenes at: unaClave ifAbsent: [
+		| archivo |
+		archivo := rutas at: unaClave ifAbsent: [ ^ nil ].
+		imagenes at: unaClave put: (ImageReadWriter formFromFileNamed: archivo fullName) ]
 ]
 
 { #category : 'initialization' }
 LongcatApp >> initialize [
 	super initialize.
 	imagenes := Dictionary new.
+	rutas := Dictionary new.
 	progresos := Dictionary new.
 	partidasAbiertas := Dictionary new.
 	skinActual := SkinGato original.
@@ -153,7 +197,7 @@ LongcatApp >> jugarColeccion: unaColeccion [
 	progreso := self progresoPara: unaColeccion.
 	interfaz := partidasAbiertas
 		at: unaColeccion class
-		ifAbsentPut: [ InterfazPartida app: self progreso: progreso ].
+		ifAbsentPut: [ (TemaMundo paraColeccion: unaColeccion) crearInterfazPara: self progreso: progreso ].
 	^ self mostrar: interfaz
 ]
 

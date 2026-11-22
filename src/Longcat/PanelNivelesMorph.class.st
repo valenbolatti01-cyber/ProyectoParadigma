@@ -21,7 +21,7 @@ Class {
 { #category : 'updating' }
 PanelNivelesMorph >> actualizarConProgreso: unProgreso [
     self sincronizarCantidadNiveles: unProgreso cantidadNiveles.
-    textoProgreso contents: 'Niveles completados: ', unProgreso textoCompletados.
+    textoProgreso contents: 'Niveles completados: ', unProgreso textoCompletados, (self textoEstrellasDe: unProgreso).
     botonesNivel withIndexDo: [ :boton :numero |
         boton color: (self colorParaEstadoNivel: (unProgreso estadoNivel: numero)) ].
     self changed.
@@ -135,4 +135,12 @@ PanelNivelesMorph >> sincronizarCantidadNiveles: unaCantidad [
     cantidadActual := unaCantidad.
     self reacomodar.
     ^ self
+]
+
+{ #category : 'private - updating' }
+PanelNivelesMorph >> textoEstrellasDe: unProgreso [
+    "Solo los mundos con movimientos de referencia tienen estrellas para mostrar"
+    ^ unProgreso estrellasMaximas = 0
+        ifTrue: [ '' ]
+        ifFalse: [ '     Estrellas: ', unProgreso totalEstrellas asString, ' de ', unProgreso estrellasMaximas asString ]
 ]

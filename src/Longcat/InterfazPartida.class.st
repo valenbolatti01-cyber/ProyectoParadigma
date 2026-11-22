@@ -1,5 +1,5 @@
 "
-Coordinador de vista de una partida. Compone PanelControlesMorph, PanelEstadoMorph, PanelNivelesMorph y TableroMorph, delegando estado y progresion en Partida y ProgresoJuego.
+Coordinador de vista de una partida. Compone PanelControlesMorph, PanelEstadoMorph, PanelNivelesMorph, PanelMarcadorMorph y el tablero, delegando estado y progresion en Partida y ProgresoJuego. Las subclases tematicas cambian el tablero y el protagonista a traves de crearVistaTablero y claveProtagonista.
 "
 Class {
 	#name : 'InterfazPartida',
@@ -11,9 +11,11 @@ Class {
 		'panelControles',
 		'panelEstado',
 		'panelNiveles',
+		'panelMarcador',
 		'botonMenu',
 		'animacion',
-		'ultimoTamano'
+		'ultimoTamano',
+		'estrellasObtenidas'
 	],
 	#category : 'Longcat',
 	#package : 'Longcat'
@@ -35,6 +37,7 @@ InterfazPartida >> actualizarSkin [
 InterfazPartida >> actualizarVista [
     vistaTablero ifNotNil: [ vistaTablero changed ].
     panelEstado ifNotNil: [ panelEstado actualizarConPartida: partida progreso: progreso ].
+    panelMarcador ifNotNil: [ panelMarcador actualizarConPartida: partida progreso: progreso ].
     panelNiveles ifNotNil: [ panelNiveles actualizarConProgreso: progreso ].
     ^ self
 ]
@@ -70,9 +73,7 @@ InterfazPartida >> cargarNivelActual [
     animacion ifNotNil: [ :anterior | anterior delete. animacion := nil ].
     vistaTablero ifNotNil: [ :vista | vista detenerSacudida; delete ].
     partida := Partida deNivel: progreso nivelActualObjeto.
-    vistaTablero := TableroMorph
-        partida: partida
-        skin: progreso skinActual.
+    vistaTablero := self crearVistaTablero.
     self addMorph: vistaTablero.
     self reacomodar.
     self actualizarVista.
@@ -98,6 +99,12 @@ InterfazPartida >> celebrarVictoria [
     ^ self
 ]
 
+{ #category : 'skins' }
+InterfazPartida >> claveProtagonista [
+    "Clave de la imagen del protagonista que se muestra en el panel de estado"
+    ^ #protagonista
+]
+
 { #category : 'private - drawing' }
 InterfazPartida >> conEsquinas [
     ^ false
@@ -115,12 +122,22 @@ InterfazPartida >> construir [
         self addMorph: botonMenu ].
     panelControles := PanelControlesMorph controlador: self.
     panelEstado := PanelEstadoMorph new.
-    panelEstado formaProtagonista: (self imagen: #protagonista).
+    panelEstado formaProtagonista: (self imagen: self claveProtagonista).
     panelNiveles := PanelNivelesMorph controlador: self.
+    panelMarcador := PanelMarcadorMorph controlador: self.
     self addMorph: panelControles.
     self addMorph: panelEstado.
     self addMorph: panelNiveles.
+    self addMorph: panelMarcador.
     ^ self
+]
+
+{ #category : 'private - building' }
+InterfazPartida >> crearVistaTablero [
+    "Vista del tablero de la partida actual (las interfaces tematicas la reemplazan)"
+    ^ TableroMorph
+        partida: partida
+        skin: progreso skinActual
 ]
 
 { #category : 'private - drawing' }
@@ -173,7 +190,7 @@ InterfazPartida >> dibujarMarcaDeAguaEn: aCanvas [
 InterfazPartida >> drawOn: aCanvas [
     self dibujarFondoEn: aCanvas.
     self dibujarEncabezadoEn: aCanvas.
-    EstiloLongcat dibujarPanel: self rectanguloAreaTablero titulo: 'Partida en curso' en: aCanvas.
+    EstiloLongcat dibujarPanel: self rectanguloPanelPartida titulo: 'Partida en curso' en: aCanvas.
     self dibujarMarcaDeAguaEn: aCanvas
 ]
 
@@ -237,7 +254,7 @@ InterfazPartida >> moverCon: unaDireccion [
     antes := partida posicionCabeza.
     partida moverEn: unaDireccion.
     (estabaActiva and: [ partida estaGanada ]) ifTrue: [
-        progreso registrarVictoria.
+        estrellasObtenidas := progreso registrarVictoriaConMovimientos: partida cantidadMovimientos.
         self actualizarVista.
         ^ self celebrarVictoria ].
     (estabaActiva and: [ partida estaPerdida ]) ifTrue: [
@@ -257,6 +274,11 @@ InterfazPartida >> nivelAnterior [
 ]
 
 { #category : 'accessing' }
+InterfazPartida >> partida [
+    ^ partida
+]
+
+{ #category : 'accessing' }
 InterfazPartida >> progreso [
     ^ progreso
 ]
@@ -265,6 +287,7 @@ InterfazPartida >> progreso [
 InterfazPartida >> reacomodar [
     | derecha abajo anchoDerecho altoNiveles areaTablero areaAncho areaAlto |
     panelControles ifNil: [ ^ self ].
+    panelMarcador bounds: self rectanguloMarcador.
     ultimoTamano := self extent.
     derecha := self bordeDerechoPaneles.
     abajo := self bordeInferiorPaneles.
@@ -277,24 +300,50 @@ InterfazPartida >> reacomodar [
     panelNiveles bounds: ((self position + (256 @ (abajo - altoNiveles))) extent: anchoDerecho @ altoNiveles).
     vistaTablero ifNotNil: [
         areaTablero := self rectanguloAreaTablero.
-        areaAncho := (areaTablero width - 28) max: 140.
-        areaAlto := (areaTablero height - 38) max: 140.
+        areaAncho := (areaTablero width - 20) max: 140.
+        areaAlto := (areaTablero height - 8) max: 140.
         vistaTablero detenerSacudida.
         vistaTablero ajustarA: areaAncho @ areaAlto.
         vistaTablero position:
             (areaTablero left + ((areaTablero width - vistaTablero width) // 2))
-            @ (areaTablero top + 22 + (((areaAlto - vistaTablero height) // 2) max: 0)) ].
+            @ (areaTablero top + (((areaTablero height - vistaTablero height) // 2) max: 0)) ].
     self changed.
     ^ self
 ]
 
 { #category : 'private - layout' }
 InterfazPartida >> rectanguloAreaTablero [
+    "Zona libre donde se centra el tablero: el panel de la partida sin su rotulo ni el marcador"
+    | panel |
+    panel := self rectanguloPanelPartida.
+    ^ (panel left @ (self rectanguloMarcador bottom + 4)) corner: (panel right @ (panel bottom - 4))
+]
+
+{ #category : 'private - layout' }
+InterfazPartida >> rectanguloMarcador [
+    | panel |
+    panel := self rectanguloPanelPartida.
+    ^ ((panel left + 14) @ (panel top + 26)) corner: ((panel right - 14) @ (panel top + 26 + 56))
+]
+
+{ #category : 'private - layout' }
+InterfazPartida >> rectanguloPanelPartida [
+    "Panel 'Partida en curso': contiene el marcador y el tablero"
     | derecha abajo altoNiveles |
     derecha := self bordeDerechoPaneles.
     abajo := self bordeInferiorPaneles.
     altoNiveles := 132.
     ^ (self position + (256 @ 78)) corner: (self position + (derecha @ (abajo - altoNiveles - 8)))
+]
+
+{ #category : 'private - actions' }
+InterfazPartida >> reiniciarNivel [
+    "Vuelve a empezar el nivel actual: el gato regresa al inicio y el contador de movimientos a cero"
+    animacion := nil.
+    partida reiniciar.
+    self actualizarVista.
+    self enfocarTeclado.
+    ^ self
 ]
 
 { #category : 'initialization' }
@@ -332,11 +381,7 @@ InterfazPartida >> takesKeyboardFocus [
 
 { #category : 'private - defeat' }
 InterfazPartida >> terminarDerrota [
-    animacion := nil.
-    partida reiniciar.
-    self actualizarVista.
-    self enfocarTeclado.
-    ^ self
+    ^ self reiniciarNivel
 ]
 
 { #category : 'private - victory' }

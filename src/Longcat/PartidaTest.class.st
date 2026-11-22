@@ -17,6 +17,14 @@ PartidaTest >> setUp [
     partida := Partida deFilas: 3 columnas: 4 inicio: (Posicion fila: 2 columna: 2)
 ]
 
+{ #category : 'tests - moves' }
+PartidaTest >> testCadaMovimientoValidoIncrementaElContador [
+    partida moverEn: Derecha new.
+    partida moverEn: Arriba new.
+    partida moverEn: Izquierda new.
+    self assert: partida cantidadMovimientos = 3
+]
+
 { #category : 'tests - terminal states' }
 PartidaTest >> testCasillasLibresInaccesiblesLlevanADerrotaAlQuedarAtrapado [
     | partidaPequena |
@@ -65,6 +73,21 @@ PartidaTest >> testLaPartidaDeUnaCasillaEmpiezaGanada [
     self assert: partidaPequena estaGanada
 ]
 
+{ #category : 'tests - moves' }
+PartidaTest >> testLaPartidaNuevaNoTieneMovimientos [
+    self assert: partida cantidadMovimientos = 0
+]
+
+{ #category : 'tests - moves' }
+PartidaTest >> testNoSeCuentanMovimientosLuegoDeTerminar [
+    | partidaPequena |
+    partidaPequena := Partida deFilas: 1 columnas: 2.
+    partidaPequena moverEn: Derecha new.
+    partidaPequena moverEn: Izquierda new.
+    self assert: partidaPequena estaGanada.
+    self assert: partidaPequena cantidadMovimientos = 1
+]
+
 { #category : 'tests - resetting' }
 PartidaTest >> testReiniciarRestauraLaPosicionYElEstado [
     | partidaPequena |
@@ -77,6 +100,14 @@ PartidaTest >> testReiniciarRestauraLaPosicionYElEstado [
     self assert: partidaPequena cantidadDisponibles = 2
 ]
 
+{ #category : 'tests - moves' }
+PartidaTest >> testReiniciarVuelveElContadorACero [
+    partida moverEn: Derecha new.
+    partida moverEn: Arriba new.
+    partida reiniciar.
+    self assert: partida cantidadMovimientos = 0
+]
+
 { #category : 'tests - movement' }
 PartidaTest >> testSeDesplazaHastaElLimiteYElGatoCrece [
     partida moverEn: Derecha new.
@@ -84,6 +115,33 @@ PartidaTest >> testSeDesplazaHastaElLimiteYElGatoCrece [
     self assert: partida longitudGato = 3.
     self assert: partida estaActiva.
     self assert: partida direccionCabeza class = Derecha
+]
+
+{ #category : 'tests - moves' }
+PartidaTest >> testUnDesplazamientoDeVariasCasillasCuentaComoUnSoloMovimiento [
+    partida moverEn: Derecha new.
+    self assert: partida longitudGato = 3.
+    self assert: partida cantidadMovimientos = 1
+]
+
+{ #category : 'tests - moves' }
+PartidaTest >> testUnaAccionSinDesplazamientoNoCuentaComoMovimiento [
+    partida moverEn: Derecha new.
+    partida moverEn: Derecha new.
+    partida moverEn: Derecha new.
+    self assert: partida cantidadMovimientos = 1
+]
+
+{ #category : 'tests - copying' }
+PartidaTest >> testUnaCopiaEvolucionaSinAfectarALaOriginal [
+    | copia |
+    copia := partida copy.
+    copia moverEn: Derecha new.
+    self assert: copia cantidadMovimientos = 1.
+    self assert: copia longitudGato = 3.
+    self assert: partida cantidadMovimientos = 0.
+    self assert: partida longitudGato = 1.
+    self assert: partida cantidadDisponibles = 11
 ]
 
 { #category : 'tests - movement' }

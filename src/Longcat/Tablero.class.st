@@ -119,6 +119,13 @@ Tablero >> ocupar: unaPosicion [
     ^ self
 ]
 
+{ #category : 'copying' }
+Tablero >> postCopy [
+    super postCopy.
+    casillas := casillas collect: [ :filaDeCasillas |
+        filaDeCasillas collect: [ :casilla | casilla copy ] ]
+]
+
 { #category : 'changing state' }
 Tablero >> reiniciar [
     casillas do: [ :filaDeCasillas |

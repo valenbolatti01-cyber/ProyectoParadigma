@@ -45,8 +45,18 @@ Nivel >> bloqueos [
 ]
 
 { #category : 'accessing' }
+Nivel >> cantidadCasillasDisponibles [
+    ^ (self filas * self columnas) - self bloqueos size
+]
+
+{ #category : 'accessing' }
 Nivel >> columnas [
     ^ mapa first size
+]
+
+{ #category : 'scoring' }
+Nivel >> estrellasPara: unaCantidadDeMovimientos [
+    ^ self rango estrellasPara: unaCantidadDeMovimientos
 ]
 
 { #category : 'accessing' }
@@ -71,6 +81,12 @@ Nivel >> mapa [
 { #category : 'accessing' }
 Nivel >> numero [
     ^ numero
+]
+
+{ #category : 'scoring' }
+Nivel >> rango [
+    "Los niveles comunes no tienen movimientos de referencia: nunca dan estrellas"
+    ^ SinRangoMovimientos new
 ]
 
 { #category : 'initialization' }

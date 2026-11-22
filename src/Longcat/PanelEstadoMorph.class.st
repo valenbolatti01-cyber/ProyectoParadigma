@@ -97,7 +97,10 @@ PanelEstadoMorph >> drawOn: aCanvas [
 
 { #category : 'accessing' }
 PanelEstadoMorph >> formaProtagonista: unaForma [
-    formaProtagonista := unaForma ifNotNil: [ unaForma scaledToSize: 176 @ 118 ].
+    "Se ajusta a la caja de 176 x 118 conservando la proporcion de cada imagen"
+    formaProtagonista := unaForma ifNotNil: [ | factor |
+        factor := (176 / unaForma width) min: (118 / unaForma height).
+        unaForma scaledToSize: (unaForma extent * factor) rounded ].
     self changed.
     ^ self
 ]
