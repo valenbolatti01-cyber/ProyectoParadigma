@@ -1,5 +1,5 @@
 "
-Cartel de resultado al completar un nivel de un mundo: panel retro con las estrellas ganadas, los movimientos realizados y los botones Reintentar y Siguiente nivel. Reutiliza el velo y el confeti de VictoriaMorph pero, a diferencia de ella, espera a que el jugador elija en lugar de cerrarse sola.
+Cartel de resultado al completar un nivel de un mundo: panel retro con las estrellas ganadas, los movimientos realizados y los botones Reintentar y Siguiente nivel. Reutiliza el velo y el confeti de AnimacionResultadoMorph (via VictoriaMorph) pero, a diferencia de ella, espera a que el jugador elija en lugar de cerrarse sola.
 "
 Class {
 	#name : 'ResultadoNivelMorph',

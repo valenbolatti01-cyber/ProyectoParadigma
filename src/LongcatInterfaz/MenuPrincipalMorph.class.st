@@ -31,10 +31,10 @@ MenuPrincipalMorph >> conEsquinas [
 
 { #category : 'building' }
 MenuPrincipalMorph >> construir [
+	"Tres botones: niveles normales, niveles personalizados y salir"
 	botones := {
 		self boton: #botonNormales texto: 'Jugar niveles normales' accion: #jugarNiveles color: EstiloLongcat colorVerde.
 		self boton: #botonPersonalizados texto: 'Niveles personalizados' accion: #jugarPersonalizados color: EstiloLongcat colorVioleta.
-		self boton: #botonSkins texto: 'Skins' accion: #verSkins color: EstiloLongcat colorVioleta.
 		self boton: #botonSalir texto: 'Salir' accion: #salir color: EstiloLongcat colorRosa }.
 	botones do: [ :boton | self addMorph: boton ].
 	^ self
@@ -78,18 +78,15 @@ MenuPrincipalMorph >> drawOn: aCanvas [
 			self dibujar: decoracion key en: (self virtual: decoracion value) sobre: canvas ].
 		self dibujarLogoEn: canvas.
 		EstiloLongcat
-			chispasEn: (self virtual: (1124 @ 150 extent: 0 @ 0)) origin
+			chispasEn: (self virtual: (1124 @ 162 extent: 0 @ 0)) origin
 			tamano: ((6 * self escala) rounded max: 2)
 			sobre: canvas ]
 ]
 
 { #category : 'layout' }
 MenuPrincipalMorph >> lugaresDeBotones [
-	^ {
-		680 @ 186 extent: 470 @ 117.
-		680 @ 319 extent: 470 @ 116.
-		680 @ 451 extent: 470 @ 113.
-		680 @ 580 extent: 470 @ 100 }
+	"Tres lugares iguales, con la misma separacion, centrados en el espacio que queda debajo del logo"
+	^ (0 to: 2) collect: [ :indice | (680 @ (198 + (indice * 157))) extent: 470 @ 133 ]
 ]
 
 { #category : 'layout' }

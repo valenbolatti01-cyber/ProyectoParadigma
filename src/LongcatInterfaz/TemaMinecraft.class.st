@@ -21,7 +21,11 @@ TemaMinecraft >> archivosDeImagenes [
 		#minecraftObstaculo -> 'Minecraft imagenes/piedra.png'.
 		#minecraftProtagonista -> 'Minecraft imagenes/Gato gamer con sudadera Creeper.png'.
 		#minecraftTituloReglas -> 'Minecraft imagenes/titulo_minecraft_reglas.png'.
-		#minecraftSeparador -> 'Minecraft imagenes/separador_cara_gato.png' }
+		#minecraftSeparador -> 'Minecraft imagenes/separador_cara_gato.png'.
+		#minecraftCabezaArriba -> #('arriba_Minecraft.png' 'atras_Minecraft.png').
+		#minecraftCabezaAbajo -> #('abajo_Minecraft.png' 'frente_Minecraft.png').
+		#minecraftCabezaDerecha -> 'derecha_Minecraft.png'.
+		#minecraftCabezaIzquierda -> 'izquierda_Minecraft.png' }
 ]
 
 { #category : 'images' }
@@ -52,6 +56,12 @@ TemaMinecraft >> claveSeparador [
 { #category : 'images' }
 TemaMinecraft >> claveTituloReglas [
 	^ #minecraftTituloReglas
+]
+
+{ #category : 'skins' }
+TemaMinecraft >> clavesDeCabeza [
+	"Cabezas del personaje de este mundo: arriba_, abajo_, derecha_ e izquierda_ en assets/sprites"
+	^ #(#minecraftCabezaArriba #minecraftCabezaAbajo #minecraftCabezaDerecha #minecraftCabezaIzquierda)
 ]
 
 { #category : 'colors' }

@@ -28,6 +28,14 @@ TemaMundoTest >> morphsDe: unaClase en: unaInterfaz [
 	^ unaInterfaz submorphs select: [ :morph | morph isKindOf: unaClase ]
 ]
 
+{ #category : 'tests - results' }
+TemaMundoTest >> testCadaAnimacionDeResultadoDeclaraSuAspecto [
+	self deny: VictoriaMorph new colorTitulo = DerrotaMorph new colorTitulo.
+	self assert: VictoriaMorph new duracionEnMilisegundos = 2500.
+	self assert: DerrotaMorph new duracionEnMilisegundos = 2200.
+	self should: [ AnimacionResultadoMorph new ] raise: Error
+]
+
 { #category : 'tests - themes' }
 TemaMundoTest >> testCadaMundoEligeSuTemaPorIdentificador [
 	self assert: (TemaMundo paraColeccion: NivelesMinecraft new) class = TemaMinecraft.
@@ -38,6 +46,16 @@ TemaMundoTest >> testCadaMundoEligeSuTemaPorIdentificador [
 TemaMundoTest >> testCadaMundoPersonalizadoTieneSuPropioTema [
 	self assert: (TemaMundo paraColeccion: NivelesPokemon new) class = TemaPokemon.
 	self assert: (TemaMundo paraColeccion: NivelesDragonBall new) class = TemaDragonBall
+]
+
+{ #category : 'tests - themes' }
+TemaMundoTest >> testCadaTemaDeclaraLasCuatroCabezasDeSuPersonaje [
+	| claves |
+	claves := TemaMundo archivosDeImagenes collect: [ :par | par key ].
+	{ TemaMinecraft new. TemaPokemon new. TemaDragonBall new } do: [ :tema |
+		self assert: tema clavesDeCabeza size = 4.
+		tema clavesDeCabeza do: [ :clave |
+			self assert: (claves includes: clave) description: clave ] ]
 ]
 
 { #category : 'tests - interface' }
@@ -80,6 +98,14 @@ TemaMundoTest >> testGanarUnNivelConLaSolucionMinimaDaTresEstrellas [
 	self assert: (self morphsDe: ResultadoNivelMorph en: interfaz) size = 1
 ]
 
+{ #category : 'tests - results' }
+TemaMundoTest >> testLaDerrotaYLaVictoriaSonAnimacionesHermanas [
+	self assert: VictoriaMorph superclass = AnimacionResultadoMorph.
+	self assert: DerrotaMorph superclass = AnimacionResultadoMorph.
+	self deny: (DerrotaMorph inheritsFrom: VictoriaMorph).
+	self assert: (ResultadoNivelMorph inheritsFrom: VictoriaMorph)
+]
+
 { #category : 'tests - interface' }
 TemaMundoTest >> testLaInterfazDeUnMundoEsTematicaYLaDeLosNivelesNormalesEsClasica [
 	ColeccionNiveles personalizadas do: [ :coleccion |
@@ -108,6 +134,13 @@ TemaMundoTest >> testLosNivelesNormalesGanadosNoOtorganEstrellasNiCartelDeResult
 	self assert: (interfaz progreso estrellasNivel: 1) = 0.
 	self assert: (self morphsDe: ResultadoNivelMorph en: interfaz) isEmpty.
 	self assert: (self morphsDe: VictoriaMorph en: interfaz) size = 1
+]
+
+{ #category : 'tests - themes' }
+TemaMundoTest >> testLosNombresDeArchivoSeReconocenConOSinTildes [
+	self assert: (LongcatApp normalizarRuta: 'sprites/abajo_Pokémon.png') = (LongcatApp normalizarRuta: 'Sprites\ABAJO_Pokemon.png').
+	self assert: (LongcatApp normalizarRuta: 'abajo_Pok#U00e9mon.png') = (LongcatApp normalizarRuta: 'abajo_Pokémon.png').
+	self assert: (LongcatApp normalizarRuta: 'Gato abajo.png') = 'gatoabajo.png'
 ]
 
 { #category : 'tests - themes' }
@@ -176,6 +209,13 @@ TemaMundoTest >> testSiguienteNivelDesdeElResultadoCargaElNivelDosSinMovimientos
 	self assert: interfaz progreso nivelActual = 2.
 	self assert: interfaz partida cantidadMovimientos = 0.
 	self assert: interfaz partida estaActiva
+]
+
+{ #category : 'tests - interface' }
+TemaMundoTest >> testSinLasImagenesDeLaCabezaElTableroUsaLaSkinGeneral [
+	| interfaz |
+	interfaz := self interfazDe: NivelesMinecraft new.
+	self assert: interfaz skinDelTablero = interfaz progreso skinActual
 ]
 
 { #category : 'tests - themes' }

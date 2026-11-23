@@ -1,9 +1,9 @@
 "
-Animacion de derrota: reutiliza la logica de VictoriaMorph con tonos rojizos centralizados en EstiloLongcat.
+Animacion de derrota: hermana de VictoriaMorph (ambas heredan de AnimacionResultadoMorph) con tonos rojizos centralizados en EstiloLongcat. Al terminar evalua el bloque alTerminar, por ejemplo reiniciar el nivel.
 "
 Class {
 	#name : 'DerrotaMorph',
-	#superclass : 'VictoriaMorph',
+	#superclass : 'AnimacionResultadoMorph',
 	#category : 'LongcatInterfaz',
 	#package : 'LongcatInterfaz'
 }
@@ -27,9 +27,7 @@ DerrotaMorph >> coloresConfeti [
 		Color gray }
 ]
 
-{ #category : 'initialization' }
-DerrotaMorph >> initialize [
-	super initialize.
-	duracion := 2200.
-	^ self
+{ #category : 'private - stepping' }
+DerrotaMorph >> duracionEnMilisegundos [
+	^ 2200
 ]

@@ -21,7 +21,11 @@ TemaDragonBall >> archivosDeImagenes [
 		#dragonBallObstaculo -> 'Dragon Ball Imagenes/Capsula_danada_obstaculo.png'.
 		#dragonBallProtagonista -> 'Dragon Ball Imagenes/Gatito_Dragon_Ball.png'.
 		#dragonBallTituloReglas -> 'Dragon Ball Imagenes/Dragon_Ball_Reglas.png'.
-		#dragonBallSeparador -> 'Dragon Ball Imagenes/separador_cara_gato.png' }
+		#dragonBallSeparador -> 'Dragon Ball Imagenes/separador_cara_gato.png'.
+		#dragonBallCabezaArriba -> 'arriba_Dragon_Ball.png'.
+		#dragonBallCabezaAbajo -> 'abajo_Dragon_ball.png'.
+		#dragonBallCabezaDerecha -> 'derecha_Dragon_Ball.png'.
+		#dragonBallCabezaIzquierda -> 'izquierda_Dragon_Ball.png' }
 ]
 
 { #category : 'images' }
@@ -52,6 +56,12 @@ TemaDragonBall >> claveSeparador [
 { #category : 'images' }
 TemaDragonBall >> claveTituloReglas [
 	^ #dragonBallTituloReglas
+]
+
+{ #category : 'skins' }
+TemaDragonBall >> clavesDeCabeza [
+	"Cabezas del personaje de este mundo: arriba_, abajo_, derecha_ e izquierda_ en assets/sprites"
+	^ #(#dragonBallCabezaArriba #dragonBallCabezaAbajo #dragonBallCabezaDerecha #dragonBallCabezaIzquierda)
 ]
 
 { #category : 'colors' }

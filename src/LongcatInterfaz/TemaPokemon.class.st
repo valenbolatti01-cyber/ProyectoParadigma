@@ -21,7 +21,11 @@ TemaPokemon >> archivosDeImagenes [
 		#pokemonObstaculo -> 'Pokemon imagenes/Roca.png'.
 		#pokemonProtagonista -> 'Pokemon imagenes/Gatito_protagonista.png'.
 		#pokemonTituloReglas -> 'Pokemon imagenes/Pokemon_Reglas.png'.
-		#pokemonSeparador -> 'Pokemon imagenes/separador_cara_gato.png' }
+		#pokemonSeparador -> 'Pokemon imagenes/separador_cara_gato.png'.
+		#pokemonCabezaArriba -> 'arriba_Pokémon.png'.
+		#pokemonCabezaAbajo -> 'abajo_Pokémon.png'.
+		#pokemonCabezaDerecha -> 'derecha_Pokémon.png'.
+		#pokemonCabezaIzquierda -> 'izquierda_Pokémon.png' }
 ]
 
 { #category : 'images' }
@@ -52,6 +56,12 @@ TemaPokemon >> claveSeparador [
 { #category : 'images' }
 TemaPokemon >> claveTituloReglas [
 	^ #pokemonTituloReglas
+]
+
+{ #category : 'skins' }
+TemaPokemon >> clavesDeCabeza [
+	"Cabezas del personaje de este mundo: arriba_, abajo_, derecha_ e izquierda_ en assets/sprites"
+	^ #(#pokemonCabezaArriba #pokemonCabezaAbajo #pokemonCabezaDerecha #pokemonCabezaIzquierda)
 ]
 
 { #category : 'colors' }

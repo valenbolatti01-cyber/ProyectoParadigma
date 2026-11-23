@@ -67,7 +67,7 @@ InterfazPartidaTematica >> construir [
 InterfazPartidaTematica >> crearVistaTablero [
 	^ tema
 		crearTableroPara: partida
-		skin: progreso skinActual
+		skin: self skinDelTablero
 		imagenes: self
 ]
 
@@ -97,4 +97,10 @@ InterfazPartidaTematica >> rectanguloPanelReglas [
 InterfazPartidaTematica >> setTema: unTema [
 	tema := unTema.
 	^ self
+]
+
+{ #category : 'skins' }
+InterfazPartidaTematica >> skinDelTablero [
+	"El gato del tablero es el mismo personaje del panel de estado: la skin del tema, si sus imagenes estan en assets"
+	^ (tema skinConImagenes: self) ifNil: [ super skinDelTablero ]
 ]

@@ -33,6 +33,12 @@ TemaTematico >> claveTituloReglas [
 	self subclassResponsibility
 ]
 
+{ #category : 'skins' }
+TemaTematico >> clavesDeCabeza [
+	"Claves de las imagenes de la cabeza del personaje del mundo, en orden: arriba, abajo, derecha, izquierda"
+	self subclassResponsibility
+]
+
 { #category : 'colors' }
 TemaTematico >> colorMarco [
 	^ EstiloLongcat colorMorado
@@ -59,6 +65,25 @@ TemaTematico >> entradasDeLeyenda [
 		self claveCasillaLibre -> self textoCasillaLibre.
 		self claveCasillaRecorrida -> self textoCasillaRecorrida.
 		self claveObstaculo -> self textoObstaculo }
+]
+
+{ #category : 'skins' }
+TemaTematico >> skinConImagenes: unProveedorDeImagenes [
+	"Skin del gato en este mundo: la cabeza del personaje del tema en sus cuatro direcciones,
+	 con el cuerpo naranja de siempre. Responde nil si falta alguna de las imagenes."
+	| cabezas |
+	cabezas := self clavesDeCabeza collect: [ :clave | unProveedorDeImagenes imagen: clave ].
+	(cabezas includes: nil) ifTrue: [ ^ nil ].
+	^ SkinGato
+		identificador: self class identificadorDeMundo
+		nombre: self class identificadorDeMundo asString
+		colorCuerpo: EstiloLongcat colorNaranja
+		colorRayas: EstiloLongcat colorRayas
+		colorBorde: self colorMarco
+		cabezaArriba: (cabezas at: 1)
+		cabezaAbajo: (cabezas at: 2)
+		cabezaDerecha: (cabezas at: 3)
+		cabezaIzquierda: (cabezas at: 4)
 ]
 
 { #category : 'rules' }

@@ -25,36 +25,54 @@ LongcatApp class >> abrir [
 ]
 
 { #category : 'images' }
+LongcatApp class >> archivoEnCarga [
+	"El archivo .st que se esta cargando con fileIn, o nil"
+	| contexto |
+	contexto := thisContext.
+	[ contexto notNil ] whileTrue: [
+		(self archivoSt: contexto receiver) ifNotNil: [ :archivo | ^ archivo ].
+		contexto := contexto sender ].
+	^ nil
+]
+
+{ #category : 'images' }
+LongcatApp class >> archivoSt: unObjeto [
+	"Si unObjeto es (o nombra) un archivo .st existente, lo responde como FileReference; si no, nil"
+	^ [ | referencia |
+		referencia := (unObjeto isKindOf: AbstractFileReference)
+			ifTrue: [ unObjeto ]
+			ifFalse: [
+				((unObjeto respondsTo: #name) and: [ unObjeto name isString ])
+					ifTrue: [ unObjeto name asFileReference ]
+					ifFalse: [ nil ] ].
+		(referencia notNil and: [ referencia isFile and: [ referencia extension asLowercase = 'st' ] ])
+			ifTrue: [ referencia ]
+			ifFalse: [ nil ] ]
+		on: Error
+		do: [ :e | nil ]
+]
+
+{ #category : 'images' }
+LongcatApp class >> carpetaAssetsJuntoA: unArchivo [
+	"La carpeta assets en la misma carpeta que el archivo, o en la de arriba"
+	{ unArchivo parent / 'assets'. unArchivo parent parent / 'assets' } do: [ :candidata |
+		candidata isDirectory ifTrue: [ ^ candidata ] ].
+	^ nil
+]
+
+{ #category : 'images' }
 LongcatApp class >> carpetaDeImagenes [
-	| candidatas contiene encontrada elegida soloGato |
-	contiene := [ :carpeta :nombresPedidos |
-		[ | nombres |
-		carpeta exists and: [
-			nombres := ((carpeta allChildren select: [ :archivo | archivo isFile ])
-				collect: [ :archivo | archivo basename asLowercase ]) asSet.
-			nombresPedidos allSatisfy: [ :nombre | nombres includes: nombre ] ] ]
-			on: Error do: [ :e | false ] ].
-	candidatas := OrderedCollection new.
-	carpetaImagenes ifNotNil: [ :ruta | candidatas add: ruta asFileReference ].
-	candidatas addAll: self carpetasDelRepositorio.
-	candidatas add: FileLocator imageDirectory resolve.
-	candidatas add: FileLocator workingDirectory resolve.
-	[ candidatas
-		add: FileLocator desktop resolve;
-		add: FileLocator documents resolve;
-		add: (FileLocator home / 'Downloads') resolve ]
+	"Carpeta assets que esta junto al longcat.st que se cargo con fileIn (la guarda recordarCarpetaDelFileIn).
+	 Si no se conoce, por ejemplo si el juego se cargo de otra forma, se pide una sola vez."
+	| elegida |
+	(carpetaImagenes notNil and: [ carpetaImagenes asFileReference isDirectory ])
+		ifTrue: [ ^ carpetaImagenes asFileReference ].
+	elegida := [ UIManager default chooseDirectory: 'Elegi la carpeta assets del juego (esta junto a longcat.st)' ]
 		on: Error do: [ :e | nil ].
-	encontrada := candidatas detect: [ :carpeta |
-		contiene value: carpeta value: #('gato abajo.png' 'logo_longcat.png' 'boton_salir.png') ] ifNone: [ nil ].
-	encontrada ifNotNil: [ ^ encontrada ].
-	elegida := [ UIManager default chooseDirectory: 'Elegi la carpeta assets (la que tiene Gato abajo.png y logo_longcat.png)' ]
-		on: Error do: [ :e | nil ].
-	elegida ifNotNil: [
-		carpetaImagenes := elegida asFileReference.
-		^ carpetaImagenes ].
-	soloGato := candidatas detect: [ :carpeta |
-		contiene value: carpeta value: #('gato abajo.png') ] ifNone: [ nil ].
-	^ soloGato ifNil: [ FileLocator imageDirectory resolve ]
+	elegida ifNil: [
+		^ self error: 'No encuentro la carpeta assets: carga longcat.st con fileIn desde la carpeta del trabajo, o indicala con LongcatApp carpetaDeImagenes: (ruta de assets)' ].
+	carpetaImagenes := elegida asFileReference.
+	^ carpetaImagenes
 ]
 
 { #category : 'images' }
@@ -65,12 +83,47 @@ LongcatApp class >> carpetaDeImagenes: unaRuta [
 
 { #category : 'images' }
 LongcatApp class >> carpetasDelRepositorio [
-	"Carpeta assets del proyecto clonado con Iceberg (Documents/Pharo/iceberg/ProyectoParadigma/assets). Se prueba primero porque es directa: no hace falta recorrer todo Documents."
-	^ [ {
-		(FileLocator documents / 'Pharo' / 'iceberg' / 'ProyectoParadigma' / 'assets') resolve.
-		(FileLocator home / 'Documents' / 'Pharo' / 'iceberg' / 'ProyectoParadigma' / 'assets') resolve } ]
-		on: Error
-		do: [ :e | #() ]
+	"Ya no se usa: las imagenes se buscan solo junto al longcat.st cargado (ver carpetaDeImagenes)"
+	^ #()
+]
+
+{ #category : 'images' }
+LongcatApp class >> imagenesQueFaltan [
+	"Para revisar los assets: ejecutar con Print it (Ctrl+P). Lista los archivos que el juego busca
+	 y no encuentra en la carpeta assets que esta junto a longcat.st"
+	^ self new archivosFaltantes
+]
+
+{ #category : 'images' }
+LongcatApp class >> letraSinTilde: unaLetra [
+	^ { $á -> $a. $é -> $e. $í -> $i. $ó -> $o. $ú -> $u. $ü -> $u. $ñ -> $n } asDictionary
+		at: unaLetra
+		ifAbsent: [ unaLetra ]
+]
+
+{ #category : 'images' }
+LongcatApp class >> normalizarRuta: unTexto [
+	"Minusculas, sin tildes ni espacios y con / como separador: asi 'Pokémon', 'Pokemon' y 'Pok#U00e9mon'
+	 se reconocen igual en Windows, Mac y Linux"
+	| texto |
+	texto := (unTexto copyReplaceAll: '\' with: '/') asLowercase.
+	texto := texto copyReplaceAll: '#u00e9' with: 'e'.
+	^ String streamContents: [ :salida |
+		texto do: [ :letra | | base |
+			base := self letraSinTilde: letra.
+			((base isLetter and: [ base asInteger < 128 ]) or: [ base isDigit or: [ './' includes: base ] ])
+				ifTrue: [ salida nextPut: base ] ] ]
+]
+
+{ #category : 'images' }
+LongcatApp class >> recordarCarpetaDelFileIn [
+	"Se ejecuta al final de longcat.st: busca en la pila de ejecucion el archivo .st que se esta cargando
+	 y guarda la carpeta assets que esta al lado (en la misma carpeta o en la de arriba)."
+	| archivo |
+	archivo := self archivoEnCarga.
+	archivo ifNil: [ ^ nil ].
+	(self carpetaAssetsJuntoA: archivo) ifNotNil: [ :carpeta | carpetaImagenes := carpeta ].
+	^ carpetaImagenes
 ]
 
 { #category : 'opening' }
@@ -85,11 +138,16 @@ LongcatApp >> abrir [
 
 { #category : 'images' }
 LongcatApp >> archivoDe: unaRutaRelativa entre: unosArchivos [
-	"El archivo cuya ruta termina en la ruta relativa pedida (sin distinguir mayusculas), o nil"
+	"El archivo cuya ruta termina en la ruta relativa pedida (sin importar mayusculas, tildes ni espacios), o nil.
+	 La ruta puede ser un texto o una lista de nombres alternativos: se usa el primero que exista."
 	| sufijo |
-	sufijo := '/', unaRutaRelativa asLowercase.
+	unaRutaRelativa isString ifFalse: [
+		unaRutaRelativa do: [ :alternativa |
+			(self archivoDe: alternativa entre: unosArchivos) ifNotNil: [ :archivo | ^ archivo ] ].
+		^ nil ].
+	sufijo := self class normalizarRuta: '/', unaRutaRelativa.
 	^ unosArchivos
-		detect: [ :archivo | (archivo fullName asLowercase copyReplaceAll: '\' with: '/') endsWith: sufijo ]
+		detect: [ :archivo | (self class normalizarRuta: archivo fullName) endsWith: sufijo ]
 		ifNone: [ nil ]
 ]
 
@@ -97,6 +155,15 @@ LongcatApp >> archivoDe: unaRutaRelativa entre: unosArchivos [
 LongcatApp >> archivosDeImagenes [
 	"Imagenes generales mas las de cada tema de mundo (cada TemaMundo declara las suyas)"
 	^ self archivosGenerales , TemaMundo archivosDeImagenes
+]
+
+{ #category : 'images' }
+LongcatApp >> archivosFaltantes [
+	| archivos |
+	archivos := self class carpetaDeImagenes allChildren select: [ :archivo | archivo isFile ].
+	^ (self archivosDeImagenes
+		reject: [ :par | (self archivoDe: par value entre: archivos) notNil ])
+		collect: [ :par | par value ]
 ]
 
 { #category : 'images' }
@@ -123,12 +190,12 @@ LongcatApp >> archivosGenerales [
 		#minecraft -> 'Minecraft.png'.
 		#pokemon -> 'Pokemon.png'.
 		#dragonBall -> 'Dragon_Ball.png'.
-		#etiquetaMovimientos -> 'marcador general/etiqueta_movimientos.png'.
-		#panelResultado -> 'marcador general/panel_resultado.png'.
-		#estrellaDorada -> 'marcador general/estrella_dorada.png'.
-		#estrellaGris -> 'marcador general/estrella_gris.png'.
-		#botonSiguienteNivel -> 'marcador general/boton_siguiente_nivel.png'.
-		#botonReintentar -> 'marcador general/boton_reintentar.png' }
+		#etiquetaMovimientos -> #('marcador general/etiqueta_movimientos.png' 'marcador general/Etiqueta pixel art morada con huella y texto retro.png').
+		#panelResultado -> #('marcador general/panel_resultado.png' 'marcador general/Panel retro morado con borde pixelado.png').
+		#estrellaDorada -> #('marcador general/estrella_dorada.png' 'marcador general/Estrella dorada pixelada con brillo.png').
+		#estrellaGris -> #('marcador general/estrella_gris.png' 'marcador general/Estrella pixelada gris con brillo púrpura.png').
+		#botonSiguienteNivel -> #('marcador general/boton_siguiente_nivel.png' 'marcador general/Botón Pixel Art Siguiente Nivel.png').
+		#botonReintentar -> #('marcador general/boton_reintentar.png' 'marcador general/Botón pixel art «Reintentar».png') }
 ]
 
 { #category : 'images' }

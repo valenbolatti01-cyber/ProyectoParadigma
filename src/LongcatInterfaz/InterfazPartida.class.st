@@ -28,9 +28,9 @@ InterfazPartida class >> app: unaApp progreso: unProgreso [
 
 { #category : 'showing' }
 InterfazPartida >> actualizarSkin [
-    vistaTablero ifNotNil: [ vistaTablero skin: progreso skinActual ].
-    partida ifNotNil: [ self actualizarVista ].
-    ^ self
+	vistaTablero ifNotNil: [ vistaTablero skin: self skinDelTablero ].
+	partida ifNotNil: [ self actualizarVista ].
+	^ self
 ]
 
 { #category : 'private - updating' }
@@ -134,10 +134,10 @@ InterfazPartida >> construir [
 
 { #category : 'private - building' }
 InterfazPartida >> crearVistaTablero [
-    "Vista del tablero de la partida actual (las interfaces tematicas la reemplazan)"
-    ^ TableroMorph
-        partida: partida
-        skin: progreso skinActual
+	"Vista del tablero de la partida actual (las interfaces tematicas la reemplazan)"
+	^ TableroMorph
+		partida: partida
+		skin: self skinDelTablero
 ]
 
 { #category : 'private - drawing' }
@@ -360,6 +360,12 @@ InterfazPartida >> siguienteNivel [
         ifTrue: [ ^ self cargarNivelActual ].
     panelNiveles mostrarAviso: 'Siguiente nivel bloqueado: completa primero el nivel ', progreso nivelActual asString.
     ^ self
+]
+
+{ #category : 'skins' }
+InterfazPartida >> skinDelTablero [
+	"Skin con la que se dibuja el gato en el tablero (los mundos tematicos usan la de su personaje)"
+	^ progreso skinActual
 ]
 
 { #category : 'stepping' }
